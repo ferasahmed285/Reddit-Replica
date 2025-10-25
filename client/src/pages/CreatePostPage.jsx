@@ -1,6 +1,6 @@
 import React from 'react';
 import { CreatePostForm } from '../components/post/CreatePostForm';
-import '../styles/pages.css';
+import '../styles/Pages.css';
 
 export default function CreatePostPage(props) {
   return (

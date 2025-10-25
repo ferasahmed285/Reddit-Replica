@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../common/Button';
 import { Search, User, LogOut, Plus } from 'lucide-react'; // Import icons
-import '../../styles/components.css';
+import '../../styles/Components.css';
 
 export const Navbar = ({ setPage, allCommunities, handleSearch }) => {
   const { currentUser, logout } = useAuth();

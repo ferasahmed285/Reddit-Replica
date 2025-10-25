@@ -2,7 +2,7 @@ import React from 'react';
 import { useMemo } from 'react';
 import { PostList } from '../components/post/PostList';
 import { User } from 'lucide-react';
-import '../styles/pages.css';
+import '../styles/Pages.css';
 
 export default function ProfilePage({ userId, ...props }) {
   const user = props.allUsers[userId];

@@ -1,5 +1,5 @@
 import React from 'react';
-import '../../styles/components.css';
+import '../../styles/Components.css';
 
 export const InputField = ({ type = 'text', placeholder, value, onChange, label }) => (
   <div className="input-field">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowUp, ArrowDown } from 'lucide-react';
-import '../../styles/components.css';
+import '../../styles/Components.css';
 
 export const VoteButtons = ({ votes, onVote, small = false }) => {
   const sizeClass = small ? 'vb--small' : 'vb--large';

@@ -4,7 +4,7 @@ import { Sparkles } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { LoadingSpinner } from '../common/LoadingSpinner';
-import '../../styles/components.css';
+import '../../styles/Components.css';
 
 export const SummarizeButton = ({ postBody }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);

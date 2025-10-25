@@ -1,7 +1,7 @@
 import React from 'react';
 import { useMemo } from 'react';
 import { PostList } from '../components/post/PostList';
-import '../styles/pages.css';
+import '../styles/Pages.css';
 
 
 export default function SearchResultsPage({ query, ...props }) {

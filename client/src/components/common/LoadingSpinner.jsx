@@ -1,5 +1,5 @@
 import React from 'react';
-import '../../styles/components.css';
+import '../../styles/Components.css';
 
 export const LoadingSpinner = () => (
   <div className="loading-spinner">

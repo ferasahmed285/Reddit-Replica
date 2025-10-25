@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { InputField } from '../common/InputField';
 import { Button } from '../common/Button';
-import '../../styles/components.css';
+import '../../styles/Components.css';
 
 export const CreatePostForm = ({ allCommunities, handleCreatePost }) => {
   const [title, setTitle] = useState('');

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navbar } from './Navbar';
-import '../../styles/components.css';
+import '../../styles/Components.css';
 
 export const Layout = ({ children, setPage, allCommunities, handleSearch }) => {
   return (

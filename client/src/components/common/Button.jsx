@@ -1,5 +1,5 @@
 import React from 'react';
-import '../../styles/components.css';
+import '../../styles/Components.css';
 
 export const Button = ({ children, onClick, variant = 'primary', className = '' }) => {
   const cls = `btn btn--${variant} ${className}`.trim();

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { PostList } from '../components/post/PostList';
 import { CreatePostForm } from '../components/post/CreatePostForm';
 import { Button } from '../components/common/Button';
-import '../styles/pages.css';
+import '../styles/Pages.css';
 
 export default function HomePage(props) {
   const sortedPosts = useMemo(() => {

@@ -7,7 +7,7 @@ import { SummarizeButton } from '../components/post/SummarizeButton';
 import { Button } from '../components/common/Button';
 import { CommunityInfoBox } from '../components/community/CommunityInfoBox';
 import { timeAgo } from '../utils/formatDate';
-import '../styles/pages.css';
+import '../styles/Pages.css';
 
 export default function PostDetailPage({ postId, ...props }) {
   const post = props.allPosts[postId];

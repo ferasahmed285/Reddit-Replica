@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { InputField } from '../components/common/InputField';
 import { Button } from '../components/common/Button';
-import '../styles/pages.css';
+import '../styles/Pages.css';
 
 export default function CreateCommunityPage({ handleCreateCommunity }) {
   const [name, setName] = useState('');

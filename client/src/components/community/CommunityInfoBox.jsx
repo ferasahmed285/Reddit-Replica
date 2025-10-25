@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../common/Button';
-import '../../styles/components.css';
+import '../../styles/Components.css';
 
 export const CommunityInfoBox = ({ community, onJoinLeave }) => {
   const { currentUser } = useAuth();

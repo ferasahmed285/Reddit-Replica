@@ -3,7 +3,7 @@ import { PostList } from '../components/post/PostList';
 import { CreatePostForm } from '../components/post/CreatePostForm';
 import { CommunityInfoBox } from '../components/community/CommunityInfoBox';
 import { Button } from '../components/common/Button';
-import '../styles/pages.css';
+import '../styles/Pages.css';
 
 export default function CommunityPage({ communityId, ...props }) {
   const community = props.allCommunities[communityId];

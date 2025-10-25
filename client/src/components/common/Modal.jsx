@@ -1,6 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react'; // Import the icon
-import '../../styles/components.css';
+import '../../styles/Components.css';
 
 export const Modal = ({ children, isOpen, onClose }) => {
   if (!isOpen) return null;

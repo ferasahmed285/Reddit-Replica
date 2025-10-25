@@ -3,7 +3,7 @@ import { MessageSquare } from 'lucide-react';
 import { VoteButtons } from '../post/VoteButtons';
 import { SummarizeButton } from '../post/SummarizeButton';
 import { timeAgo } from '../../utils/formatDate';
-import '../../styles/components.css';
+import '../../styles/Components.css';
 
 
 export const Post = ({ post, community, author, commentCount, setPage, onVote }) => {

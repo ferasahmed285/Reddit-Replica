@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal } from '../common/Modal';
 import { InputField } from '../common/InputField';
 import { Button } from '../common/Button';
-import '../../styles/components.css';
+import '../../styles/Components.css';
 
 export const CreateCommunityModal = ({ isOpen, onClose, onCreate }) => {
   const [name, setName] = useState('');
