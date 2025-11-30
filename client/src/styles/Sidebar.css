@@ -1,0 +1,114 @@
+.sidebar-container {
+  /* 1. Decrease Width */
+  width: 224px; 
+  min-width: 224px; /* Ensure it doesn't shrink in flexbox */
+  /* Calculate height: 100% of viewport minus header (56px) */
+  height: calc(100vh - 56px); 
+  background-color: #ffffff;
+  border-right: 1px solid var(--color-border);
+  /* Sticky Positioning */
+  position: sticky; 
+  top: 56px; 
+  overflow-y: auto; 
+  /* 2. Fix the Gap: Reduce top padding (was 16px) */
+  padding: 8px 0; 
+  box-sizing: border-box;
+}
+
+/* Hide scrollbar for Chrome/Safari/Opera but keep functionality */
+.sidebar-container::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar-container::-webkit-scrollbar-thumb {
+  background-color: #edeff1;
+  border-radius: 4px;
+}
+.sidebar-container:hover::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+}
+
+.sidebar-section {
+  padding: 0 12px;
+  margin-bottom: 16px;
+}
+
+.sidebar-divider {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 16px 24px;
+}
+
+.sidebar-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  padding-left: 12px;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  text-decoration: none;
+  color: var(--color-text-main);
+  border-radius: 8px;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.sidebar-link:hover {
+  background-color: var(--color-secondary-bg);
+}
+
+.sidebar-icon {
+  margin-right: 12px;
+  font-size: 20px;
+  width: 24px;
+  text-align: center;
+}
+
+/* Circular icons for subreddits */
+.sidebar-icon-circle {
+  margin-right: 12px;
+  font-size: 16px;
+  width: 24px;
+  height: 24px;
+  background-color: #e4e4e4;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-create-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: var(--color-text-main);
+  border-radius: 8px;
+}
+
+.sidebar-create-btn:hover {
+  background-color: var(--color-secondary-bg);
+}
+
+.sidebar-create-btn span {
+  font-size: 20px;
+  margin-right: 12px;
+  font-weight: 300;
+}
+
+.sidebar-footer {
+  padding: 0 24px;
+  font-size: 12px;
+  color: var(--color-text-light);
+  line-height: 1.5;
+}

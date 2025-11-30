@@ -1,18 +1,17 @@
 import React from 'react';
-import { ArrowUp, ArrowDown } from 'lucide-react';
-import '../../styles/Components.css';
 
-export const VoteButtons = ({ votes, onVote, small = false }) => {
-  const sizeClass = small ? 'vb--small' : 'vb--large';
+const VoteButtons = ({ initialCount }) => {
   return (
-    <div className={`vote-buttons ${small ? 'vote-buttons--row' : 'vote-buttons--col'}`}>
-      <button onClick={() => onVote('up')} className="vote-buttons__btn" aria-label="Upvote">
-        <ArrowUp className={sizeClass} />
+    <div className="vote-container">
+      <button className="vote-btn upvote" aria-label="Upvote">
+        ⬆
       </button>
-      <span className="vote-buttons__count">{votes}</span>
-      <button onClick={() => onVote('down')} className="vote-buttons__btn" aria-label="Downvote">
-        <ArrowDown className={sizeClass} />
+      <span className="vote-count">{initialCount}</span>
+      <button className="vote-btn downvote" aria-label="Downvote">
+        ⬇
       </button>
     </div>
   );
 };
+
+export default VoteButtons;

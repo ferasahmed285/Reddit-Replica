@@ -1,0 +1,119 @@
+.right-sidebar {
+  width: 312px;
+  /* Add some margin if necessary, but usually handled by parent flex gap */
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* --- Widget Card Styling --- */
+.widget-container {
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  overflow: hidden; /* Ensures content respects rounded corners */
+}
+
+.widget-header {
+  padding: 12px;
+  background-color: #f7f9fa; /* Slightly darker header for widget */
+}
+
+.widget-header h3 {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #787c7e;
+  margin: 0;
+}
+
+/* --- Community List --- */
+.community-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.community-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.community-item:last-child {
+  border-bottom: none;
+}
+
+.community-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-right: 12px;
+}
+
+.community-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.community-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1c1c1c;
+  text-decoration: none;
+  line-height: 18px;
+}
+
+.community-name:hover {
+  text-decoration: underline;
+}
+
+.community-members {
+  font-size: 12px;
+  color: #7c7c7c;
+}
+
+/* --- See More Button --- */
+.btn-see-more {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: none;
+  border-top: 1px solid #f0f0f0;
+  color: #0079d3; /* Link blue */
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: left;
+  padding-left: 16px;
+}
+
+.btn-see-more:hover {
+  background-color: #f6f7f8;
+}
+
+/* --- Footer --- */
+.right-sidebar-footer {
+  padding: 12px;
+  font-size: 12px;
+  color: #7c7c7c;
+  border: 1px solid transparent; /* Maintains alignment */
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.footer-links p {
+  margin: 0;
+  cursor: pointer;
+}
+
+.copyright {
+  margin: 0;
+}

@@ -1,48 +1,101 @@
-import React, { useMemo } from 'react';
-import { PostList } from '../components/post/PostList';
-import { CreatePostForm } from '../components/post/CreatePostForm';
-import { Button } from '../components/common/Button';
-import '../styles/Pages.css';
+import React, { useState } from 'react';
+import Sidebar from '../components/layout/Sidebar';
+import RightSidebar from '../components/layout/RightSidebar';
+import PostList from '../components/post/PostList';
+import '../styles/CommunityPage.css'; // Reusing the sort button styles we created
 
-export default function HomePage(props) {
-  const sortedPosts = useMemo(() => {
-    return Object.values(props.allPosts).sort((a, b) => new Date(b.created) - new Date(a.created));
-  }, [props.allPosts]);
-  
-  const topCommunities = useMemo(() => {
-    return Object.values(props.allCommunities).sort((a, b) => b.members - a.members).slice(0, 5);
-  }, [props.allCommunities]);
+const HomePage = ({ onAuthAction }) => {
+  // 1. State for sorting
+  const [sortBy, setSortBy] = useState('hot');
 
   return (
-    <div className="page-grid">
-      {/* Main Feed */}
-      <div className="page-main">
-        <CreatePostForm {...props} />
-        <PostList posts={sortedPosts} {...props} />
-      </div>
+    <div className="home-page">
+      
+      <div style={{ display: 'flex', backgroundColor: '#DAE0E6', minHeight: '100vh' }}>
+        <div style={{ display: 'flex', width: '100%', maxWidth: '1200px', justifyContent: 'center' }}>
+            
+            {/* Left Sidebar */}
+            <div style={{ display: 'block' }}> 
+               <Sidebar />
+            </div>
 
-      {/* Sidebar */}
-      <aside className="page-sidebar">
-        <div className="sidebar-card">
-          <h3 className="sidebar-title">Top Communities</h3>
-          <ul className="sidebar-list">
-            {topCommunities.map((c, index) => (
-              <li key={c.id} className="sidebar-item">
-                <span className="sidebar-rank">{index + 1}</span>
-                <div className="sidebar-avatar">{c.name.charAt(0)}</div>
-                <a 
-                  href="#"
-                  onClick={(e) => { e.preventDefault(); props.setPage({ name: 'community', id: c.id }) }}
-                  className="sidebar-link"
-                >
-                  r/{c.name}
-                </a>
-              </li>
-            ))}
-          </ul>
-          <Button variant="primary" className="full-width mt-4" onClick={() => props.setPage({ name: 'create-community' })}>Create Community</Button>
+            {/* Main Content + Right Sidebar */}
+            <div style={{ display: 'flex', flex: 1, padding: '20px 24px', gap: '24px' }}>
+                <main style={{ flex: 1, maxWidth: '740px' }}>
+                  
+                  {/* 2. "Create Post" Input Bar (Triggers Login) */}
+                  <div style={{ 
+                    background: '#fff', 
+                    padding: '8px', 
+                    borderRadius: '4px', 
+                    marginBottom: '16px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    border: '1px solid #ccc' 
+                  }}>
+                      <div style={{ marginRight: '8px' }}>
+                         <img 
+                           src="https://placehold.co/38/edeff1/878a8c?text=Snoo" 
+                           alt="User" 
+                           style={{ width: '38px', height: '38px', borderRadius: '50%' }}
+                         />
+                      </div>
+                      <input 
+                        type="text" 
+                        placeholder="Create Post" 
+                        style={{ 
+                          flex: 1, 
+                          background: '#f6f7f8', 
+                          border: '1px solid #edeff1', 
+                          borderRadius: '4px', 
+                          padding: '10px 16px',
+                          outline: 'none',
+                          cursor: 'text'
+                        }}
+                        onClick={onAuthAction} // Trigger Login Modal
+                      />
+                      <button onClick={onAuthAction} style={{ border: 'none', background: 'none', fontSize: '20px', marginLeft: '8px', cursor: 'pointer' }}>🖼️</button>
+                      <button onClick={onAuthAction} style={{ border: 'none', background: 'none', fontSize: '20px', marginLeft: '8px', cursor: 'pointer' }}>🔗</button>
+                  </div>
+
+                  {/* 3. Sorting Controls */}
+                  <div className="feed-controls">
+                    <button 
+                      className={`btn-sort ${sortBy === 'hot' ? 'active' : ''}`} 
+                      onClick={() => setSortBy('hot')}
+                    >
+                      🔥 Hot
+                    </button>
+                    <button 
+                      className={`btn-sort ${sortBy === 'new' ? 'active' : ''}`} 
+                      onClick={() => setSortBy('new')}
+                    >
+                      ✨ New
+                    </button>
+                    <button 
+                      className={`btn-sort ${sortBy === 'top' ? 'active' : ''}`} 
+                      onClick={() => setSortBy('top')}
+                    >
+                      ⬆ Top
+                    </button>
+                  </div>
+
+                  {/* 4. Post List with Props */}
+                  <PostList 
+                    sortBy={sortBy} 
+                    onAuthRequired={onAuthAction} 
+                  />
+                </main>
+
+                {/* Right Sidebar */}
+                <div className="desktop-only" style={{ width: '312px' }}>
+                   <RightSidebar />
+                </div>
+            </div>
         </div>
-      </aside>
+      </div>
     </div>
   );
 };
+
+export default HomePage;

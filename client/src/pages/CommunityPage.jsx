@@ -1,37 +1,94 @@
-import React, { useMemo } from 'react';
-import { PostList } from '../components/post/PostList';
-import { CreatePostForm } from '../components/post/CreatePostForm';
-import { CommunityInfoBox } from '../components/community/CommunityInfoBox';
-import { Button } from '../components/common/Button';
-import '../styles/Pages.css';
+import React, { useState } from 'react'; // 1. Import useState
+import { useParams } from 'react-router-dom';
+import Sidebar from '../components/layout/Sidebar';
+import RightSidebar from '../components/layout/RightSidebar';
+import PostList from '../components/post/PostList';
+import CommunityHeader from '../components/community/CommunityHeader';
+import { getCommunityByName } from '../data/communities';
+import '../styles/CommunityPage.css'; // Optional: Create this for the sort buttons
 
-export default function CommunityPage({ communityId, ...props }) {
-  const community = props.allCommunities[communityId];
+// 2. Accept onAuthAction prop
+const CommunityPage = ({ onAuthAction }) => {
+  const { subreddit } = useParams();
+  const communityData = getCommunityByName(subreddit);
   
-  const communityPosts = useMemo(() => {
-    return Object.values(props.allPosts)
-      .filter(p => p.communityId === communityId)
-      .sort((a, b) => new Date(b.created) - new Date(a.created));
-  }, [props.allPosts, communityId]);
+  // 3. State for sorting
+  const [sortBy, setSortBy] = useState('hot');
 
-  if (!community) {
-    return (
-      <div>
-        <h2 className="page-error">Community not found!</h2>
-        <Button onClick={() => props.setPage({ name: 'home' })}>Go Home</Button>
-      </div>
-    );
-  }
+  if (!communityData) return <div>Community not found</div>;
 
   return (
-    <div className="page-grid">
-      <div className="page-main">
-        <CreatePostForm {...props} />
-        <PostList posts={communityPosts} {...props} />
+    <div className="community-page">
+      
+      <div style={{ display: 'flex', backgroundColor: '#DAE0E6', minHeight: '100vh' }}>
+        <div style={{ display: 'flex', width: '100%', maxWidth: '1200px', justifyContent: 'center' }}>
+            
+            <div style={{ display: 'block' }}> 
+               <Sidebar />
+            </div>
+
+            <div style={{ display: 'flex', flex: 1, flexDirection: 'column', width: '100%' }}>
+                
+                <CommunityHeader 
+                  name={communityData.name}
+                  title={communityData.title}
+                  bannerUrl={communityData.bannerUrl}
+                  iconUrl={communityData.iconUrl}
+                  members={communityData.members}
+                />
+
+                <div style={{ display: 'flex', padding: '20px 24px', gap: '24px' }}>
+                    <main style={{ flex: 1, maxWidth: '740px' }}>
+                      
+                      {/* 4. NEW: Sorting Controls & Create Post Trigger */}
+                      <div className="feed-controls">
+                        <button 
+                          className={`btn-sort ${sortBy === 'hot' ? 'active' : ''}`} 
+                          onClick={() => setSortBy('hot')}
+                        >
+                          🔥 Hot
+                        </button>
+                        <button 
+                          className={`btn-sort ${sortBy === 'new' ? 'active' : ''}`} 
+                          onClick={() => setSortBy('new')}
+                        >
+                          ✨ New
+                        </button>
+                        <button 
+                          className={`btn-sort ${sortBy === 'top' ? 'active' : ''}`} 
+                          onClick={() => setSortBy('top')}
+                        >
+                          ⬆ Top
+                        </button>
+                        
+                        {/* Requirement: Trigger Login on Create Post */}
+                        <button 
+                          className="btn-sort" 
+                          style={{ marginLeft: 'auto' }} 
+                          onClick={onAuthAction} 
+                        >
+                          + Create Post
+                        </button>
+                      </div>
+
+                      {/* 5. Pass props to PostList */}
+                      <PostList 
+                        filterBySubreddit={subreddit} 
+                        sortBy={sortBy} 
+                        onAuthRequired={onAuthAction} 
+                      />
+                    </main>
+
+                    <div className="desktop-only" style={{ width: '312px' }}>
+                        <RightSidebar communityData={communityData} />
+                    </div>
+                </div>
+            </div>
+
+        </div>
       </div>
-      <aside className="page-sidebar">
-        <CommunityInfoBox community={community} onJoinLeave={props.handleJoinLeave} />
-      </aside>
     </div>
   );
 };
+
+export default CommunityPage;

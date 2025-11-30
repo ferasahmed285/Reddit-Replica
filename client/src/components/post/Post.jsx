@@ -1,72 +1,84 @@
 import React from 'react';
-import { MessageSquare } from 'lucide-react';
-import { VoteButtons } from '../post/VoteButtons';
-import { SummarizeButton } from '../post/SummarizeButton';
-import { timeAgo } from '../../utils/formatDate';
-import '../../styles/Components.css';
+import { Link } from 'react-router-dom';
+import '../../styles/Post.css';
 
+const Post = ({ post, onAuthRequired }) => {
+  
+  // Restricted Action Handler
+  const handleRestrictedAction = (e) => {
+    e.preventDefault();
+    e.stopPropagation(); // Stop click from opening post details
+    onAuthRequired(); // Trigger login modal
+  };
 
-export const Post = ({ post, community, author, commentCount, setPage, onVote }) => {
   return (
-    <article className="post">
-      {/* Vote Section */}
-      <div className="post__votes">
-        <VoteButtons votes={post.votes} onVote={(dir) => onVote(post.id, dir)} />
+    <article className="post-card">
+      {/* 1. Header: Subreddit, User, Time */}
+      <div className="post-header-row">
+        {post.subredditIcon && <img src={post.subredditIcon} alt="" className="post-sub-icon" />}
+        
+        <div className="post-meta-text">
+          <Link to={`/r/${post.subreddit}`} className="post-subreddit-link">
+            r/{post.subreddit}
+          </Link>
+          <span className="separator">•</span>
+          <span className="post-time">{post.timeAgo}</span>
+          <span className="separator">•</span>
+          <Link to={`/u/${post.author}`} className="post-user-link">
+            {post.author}
+          </Link>
+        </div>
+        
+        <button className="btn-join-sm" onClick={handleRestrictedAction}>Join</button>
+        <button className="btn-options">•••</button>
       </div>
 
-      {/* Content Section */}
-      <div className="post__content">
-        {/* Post Header */}
-        <div className="post__meta">
-          <a 
-            href="#"
-            onClick={(e) => { e.preventDefault(); setPage({ name: 'community', id: community.id }); }}
-            className="post__community"
-          >
-            r/{community.name}
-          </a>
-          <span className="post__dot">•</span>
-          Posted by 
-          <a 
-            href="#"
-            onClick={(e) => { e.preventDefault(); setPage({ name: 'profile', id: author.id }); }}
-            className="post__author"
-          >
-            u/{author.username}
-          </a>
-          <span className="post__time">{timeAgo(post.created)}</span>
+      {/* 2. Title */}
+      <h3 className="post-title-new">{post.title}</h3>
+
+      {/* 3. Content (Image or Text) */}
+      <div className="post-content-new">
+        {post.type === 'image' && (
+           <div className="media-container">
+             <img src={post.content} alt={post.title} />
+           </div>
+        )}
+        {post.type === 'text' && (
+           <p className="text-preview">{post.content}</p>
+        )}
+      </div>
+
+      {/* 4. Footer Actions (Pills) */}
+      <div className="post-footer-new">
+        
+        {/* Vote Pill */}
+        <div className="action-pill">
+          <button className="icon-btn up" onClick={handleRestrictedAction}>
+            ⬆
+          </button>
+          <span className="vote-count-text">{post.votes}</span>
+          <button className="icon-btn down" onClick={handleRestrictedAction}>
+            ⬇
+          </button>
         </div>
 
-        {/* Post Title */}
-        <h3 className="post__title">
-          <a
-            href="#"
-            onClick={(e) => { e.preventDefault(); setPage({ name: 'post', id: post.id }); }}
-            className="post__titleLink"
-          >
-            {post.title}
-          </a>
-        </h3>
-
-        {/* Post Body (Preview) */}
-        <p className="post__body">
-          {post.body}
-        </p>
-
-        {/* Post Footer Actions */}
-        <div className="post__actions">
-          <a
-            href="#"
-            onClick={(e) => { e.preventDefault(); setPage({ name: 'post', id: post.id }); }}
-            className="post__commentsLink"
-          >
-            <MessageSquare className="post__icon" />
-            {commentCount} Comments
-          </a>
-          {/* Requirement #11: AI Integration */}
-          <SummarizeButton postBody={post.body} />
+        {/* Comment Pill */}
+        <div className="action-pill">
+          <span className="icon-msg">💬</span>
+          <span className="action-text">{post.comments}</span>
         </div>
+
+        {/* Share/Award Pills */}
+        <button className="action-pill btn-share">
+          <span className="icon-share">↪</span> Share
+        </button>
+        
+        <button className="action-pill btn-award">
+           💎
+        </button>
       </div>
     </article>
   );
 };
+
+export default Post;
