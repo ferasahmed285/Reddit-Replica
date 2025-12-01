@@ -1,12 +1,11 @@
-import React from 'react';
 import Post from './Post';
-import { posts } from '../../data/posts';
+import { posts, allPosts } from '../../data/posts';
 import { communities } from '../../data/communities';
 
 const PostList = ({ filterBySubreddit, filterByAuthor, sortBy, onAuthRequired }) => {
   
   // 1. Filter
-  let displayPosts = [...posts]; // Copy array
+  let displayPosts = [...(allPosts || posts)]; // Use allPosts if available
 
   if (filterBySubreddit) {
     displayPosts = displayPosts.filter(p => p.subreddit.toLowerCase() === filterBySubreddit.toLowerCase());

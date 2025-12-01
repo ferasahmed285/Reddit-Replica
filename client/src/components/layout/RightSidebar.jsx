@@ -1,9 +1,24 @@
-// src/components/layout/RightSidebar.jsx
-import React from 'react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import '../../styles/RightSidebar.css';
-import { popularCommunities } from '../../data/communities'; // <--- Import added
+import { communities } from '../../data/communities';
 
 const RightSidebar = ({ communityData }) => {
+  const [showAll, setShowAll] = useState(false);
+  
+  // Sort communities by member count (convert string to number for sorting)
+  const parseMembers = (memberStr) => {
+    const num = parseFloat(memberStr);
+    if (memberStr.includes('M')) return num * 1000000;
+    if (memberStr.includes('k')) return num * 1000;
+    return num;
+  };
+
+  const sortedCommunities = [...communities].sort((a, b) => 
+    parseMembers(b.members) - parseMembers(a.members)
+  );
+
+  const displayedCommunities = showAll ? sortedCommunities : sortedCommunities.slice(0, 5);
   
   // CASE 1: Community Page (About Widget)
   if (communityData) {
@@ -61,19 +76,25 @@ const RightSidebar = ({ communityData }) => {
           <h3>POPULAR COMMUNITIES</h3>
         </div>
         <ul className="community-list">
-          {/* Now using the imported data array */}
-          {popularCommunities.map((community, index) => (
-            <li key={index} className="community-item">
-              <img src={community.icon} alt="" className="community-icon" />
+          {displayedCommunities.map((community, index) => (
+            <li key={community.id} className="community-item">
+              <div className="community-rank">{index + 1}</div>
+              <img src={community.iconUrl} alt="" className="community-icon" />
               <div className="community-info">
-                {/* Updated to link to dynamic routes */}
-                <a href={`/${community.name}`} className="community-name">{community.name}</a>
-                <span className="community-members">{community.members}</span>
+                <Link to={`/r/${community.id}`} className="community-name">
+                  {community.name}
+                </Link>
+                <span className="community-members">{community.members} members</span>
               </div>
             </li>
           ))}
         </ul>
-        <button className="btn-see-more">See more</button>
+        <button 
+          className="btn-see-more" 
+          onClick={() => setShowAll(!showAll)}
+        >
+          {showAll ? 'Show less' : 'See more'}
+        </button>
       </div>
       
       <div className="right-sidebar-footer">

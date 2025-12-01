@@ -1,18 +1,15 @@
-import React, { useState } from 'react'; // 1. Import useState
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Sidebar from '../components/layout/Sidebar';
 import RightSidebar from '../components/layout/RightSidebar';
 import PostList from '../components/post/PostList';
 import CommunityHeader from '../components/community/CommunityHeader';
 import { getCommunityByName } from '../data/communities';
-import '../styles/CommunityPage.css'; // Optional: Create this for the sort buttons
+import '../styles/CommunityPage.css';
 
-// 2. Accept onAuthAction prop
-const CommunityPage = ({ onAuthAction }) => {
+const CommunityPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) => {
   const { subreddit } = useParams();
   const communityData = getCommunityByName(subreddit);
-  
-  // 3. State for sorting
   const [sortBy, setSortBy] = useState('hot');
 
   if (!communityData) return <div>Community not found</div>;
@@ -20,12 +17,10 @@ const CommunityPage = ({ onAuthAction }) => {
   return (
     <div className="community-page">
       
-      <div style={{ display: 'flex', backgroundColor: '#DAE0E6', minHeight: '100vh' }}>
-        <div style={{ display: 'flex', width: '100%', maxWidth: '1200px', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', backgroundColor: 'var(--color-bg-page)', minHeight: '100vh' }}>
+        <div style={{ display: 'flex', width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
             
-            <div style={{ display: 'block' }}> 
-               <Sidebar />
-            </div>
+            <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
 
             <div style={{ display: 'flex', flex: 1, flexDirection: 'column', width: '100%' }}>
                 

@@ -1,0 +1,57 @@
+.vote-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.vote-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  line-height: 1;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vote-btn:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.vote-btn.upvote:hover {
+  color: var(--color-upvote);
+}
+
+.vote-btn.upvote.active {
+  color: var(--color-upvote);
+  font-weight: bold;
+}
+
+.vote-btn.downvote:hover {
+  color: var(--color-downvote);
+}
+
+.vote-btn.downvote.active {
+  color: var(--color-downvote);
+  font-weight: bold;
+}
+
+.vote-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  min-width: 32px;
+  text-align: center;
+}
+
+.vote-btn.upvote.active ~ .vote-count {
+  color: var(--color-upvote);
+}

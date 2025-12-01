@@ -1,8 +1,8 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import '../../styles/Post.css';
 
 const Post = ({ post, onAuthRequired }) => {
+  const navigate = useNavigate();
   
   // Restricted Action Handler
   const handleRestrictedAction = (e) => {
@@ -11,8 +11,13 @@ const Post = ({ post, onAuthRequired }) => {
     onAuthRequired(); // Trigger login modal
   };
 
+  // Navigate to post detail
+  const handlePostClick = () => {
+    navigate(`/post/${post.id}`);
+  };
+
   return (
-    <article className="post-card">
+    <article className="post-card" onClick={handlePostClick}>
       {/* 1. Header: Subreddit, User, Time */}
       <div className="post-header-row">
         {post.subredditIcon && <img src={post.subredditIcon} alt="" className="post-sub-icon" />}

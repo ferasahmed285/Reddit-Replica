@@ -1,0 +1,21 @@
+.comment-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.no-comments {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--color-text-secondary);
+}
+
+.no-comments p {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.no-comments-sub {
+  font-size: 14px;
+  font-weight: 400;
+}

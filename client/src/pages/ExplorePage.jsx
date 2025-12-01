@@ -1,0 +1,70 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import Sidebar from '../components/layout/Sidebar';
+import { communities, communityCategories } from '../data/communities';
+import '../styles/ExplorePage.css';
+
+const ExplorePage = ({ isSidebarCollapsed, onToggleSidebar }) => {
+  const [selectedCategory, setSelectedCategory] = useState('All');
+
+  const filteredCommunities = selectedCategory === 'All' 
+    ? communities 
+    : communities.filter(c => c.category === selectedCategory);
+
+  return (
+    <div style={{ display: 'flex', backgroundColor: 'var(--color-bg-page)', minHeight: '100vh' }}>
+      <div style={{ display: 'flex', width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
+        <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
+        
+        <div style={{ flex: 1, padding: '20px 24px' }}>
+          <h1 className="explore-title">Explore Communities</h1>
+          
+          {/* Category Filters */}
+          <div className="category-filters">
+            {communityCategories.map((category) => (
+              <button
+                key={category}
+                className={`category-btn ${selectedCategory === category ? 'active' : ''}`}
+                onClick={() => setSelectedCategory(category)}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+
+          {/* Communities Grid */}
+          <div className="communities-grid">
+            {filteredCommunities.map((community) => (
+              <Link 
+                to={`/r/${community.id}`} 
+                key={community.id} 
+                className="community-card"
+              >
+                <div className="community-card-banner" style={{ backgroundImage: `url(${community.bannerUrl})` }} />
+                <div className="community-card-content">
+                  <img src={community.iconUrl} alt={community.name} className="community-card-icon" />
+                  <h3 className="community-card-name">{community.name}</h3>
+                  <p className="community-card-description">{community.description}</p>
+                  <div className="community-card-stats">
+                    <span className="community-stat">{community.members} members</span>
+                    <span className="community-stat-dot">•</span>
+                    <span className="community-stat">{community.online} online</span>
+                  </div>
+                  <span className="community-category-tag">{community.category}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {filteredCommunities.length === 0 && (
+            <div className="no-communities">
+              <p>No communities found in this category</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ExplorePage;

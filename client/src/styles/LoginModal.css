@@ -15,17 +15,29 @@
 
 /* --- Main Card --- */
 .modal-content {
-  background-color: #fff;
+  background-color: var(--color-bg-card);
   width: 400px;
   max-width: 90%;
   max-height: 90vh;
-  border-radius: 12px; /* Smooth corners */
-  padding: 40px 60px; /* Generous padding like screenshot */
+  border-radius: var(--radius-lg);
+  padding: 40px 60px;
   position: relative;
   overflow-y: auto;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .modal-close-btn {
@@ -35,9 +47,22 @@
   background: none;
   border: none;
   font-size: 24px;
-  color: #878a8c;
+  color: var(--color-text-secondary);
   cursor: pointer;
   padding: 8px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close-btn:hover {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  transform: rotate(90deg);
 }
 
 /* --- Header & Legal --- */
@@ -45,19 +70,24 @@
   margin: 0 0 8px 0;
   font-size: 24px;
   font-weight: 500;
-  color: #1a1a1b;
+  color: var(--color-text-primary);
 }
 
 .legal-text {
   font-size: 12px;
   line-height: 1.5;
-  color: #1a1a1b;
+  color: var(--color-text-primary);
   margin-bottom: 24px;
 }
 
 .legal-text a {
-  color: #0079d3;
+  color: var(--color-blue);
   text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.legal-text a:hover {
+  text-decoration: underline;
 }
 
 /* --- Buttons --- */
@@ -70,23 +100,25 @@
 .btn-auth {
   display: flex;
   align-items: center;
-  justify-content: center; /* Center text/icon */
+  justify-content: center;
   width: 100%;
   padding: 10px;
-  background-color: #fff;
-  border: 1px solid #dadce0;
-  border-radius: 20px; /* Rounded pill shape */
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
   font-size: 14px;
   font-weight: 600;
-  color: #3c4043;
+  color: var(--color-text-primary);
   cursor: pointer;
   position: relative;
-  transition: background-color 0.2s;
+  transition: all var(--transition-normal);
 }
 
 .btn-auth:hover {
-  background-color: #f8f9fa;
-  border-color: #d2d2d2;
+  background-color: var(--color-bg-hover);
+  border-color: var(--color-text-secondary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-auth .icon {
@@ -100,7 +132,7 @@
   display: flex;
   align-items: center;
   margin: 24px 0;
-  color: #878a8c;
+  color: var(--color-text-secondary);
   font-size: 14px;
   font-weight: 700;
 }
@@ -109,7 +141,7 @@
 .divider::after {
   content: "";
   flex: 1;
-  border-top: 1px solid #edeff1;
+  border-top: 1px solid var(--color-border-light);
 }
 
 .divider span {
@@ -123,19 +155,20 @@
 
 .input-group input {
   width: 100%;
-  padding: 18px 12px 6px; /* High top padding simulates floating label space */
-  background-color: #f6f7f8;
-  border: 1px solid rgba(0,0,0,0.1);
-  border-radius: 12px;
+  padding: 18px 12px 6px;
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
   font-size: 14px;
   outline: none;
   box-sizing: border-box;
-  transition: all 0.2s;
+  transition: all var(--transition-normal);
 }
 
 .input-group input:focus {
-  background-color: #fff;
-  border-color: #0079d3;
+  background-color: var(--color-bg-card);
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px rgba(0, 121, 211, 0.1);
 }
 
 .form-footer {
@@ -144,39 +177,52 @@
 }
 
 .form-footer a {
-  color: #0079d3;
+  color: var(--color-blue);
   text-decoration: none;
   font-weight: 600;
+  transition: color var(--transition-fast);
+}
+
+.form-footer a:hover {
+  text-decoration: underline;
 }
 
 .btn-submit {
   width: 100%;
   padding: 12px;
-  background-color: #d93a00; /* Reddit Orange */
+  background-color: var(--color-primary-dark);
   color: white;
   border: none;
-  border-radius: 20px;
+  border-radius: var(--radius-full);
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   margin-bottom: 16px;
+  transition: all var(--transition-normal);
 }
 
 .btn-submit:hover {
-  background-color: #c03300;
+  background-color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 /* --- Footer --- */
 .modal-footer {
   font-size: 12px;
-  color: #1a1a1b;
+  color: var(--color-text-primary);
 }
 
 .modal-footer a {
-  color: #0079d3;
+  color: var(--color-blue);
   font-weight: 700;
   text-decoration: none;
   margin-left: 4px;
+  transition: color var(--transition-fast);
+}
+
+.modal-footer a:hover {
+  text-decoration: underline;
 }
 
 @keyframes fadeIn {

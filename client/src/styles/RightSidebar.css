@@ -8,10 +8,15 @@
 
 /* --- Widget Card Styling --- */
 .widget-container {
-  background-color: #ffffff;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  overflow: hidden; /* Ensures content respects rounded corners */
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: box-shadow var(--transition-normal);
+}
+
+.widget-container:hover {
+  box-shadow: var(--shadow-sm);
 }
 
 .widget-header {
@@ -24,7 +29,7 @@
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: #787c7e;
+  color: var(--color-text-meta);
   margin: 0;
 }
 
@@ -39,18 +44,32 @@
   display: flex;
   align-items: center;
   padding: 12px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--color-border-light);
+  gap: 12px;
+  transition: background-color var(--transition-fast);
+}
+
+.community-item:hover {
+  background-color: var(--color-bg-hover);
 }
 
 .community-item:last-child {
   border-bottom: none;
 }
 
+.community-rank {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  min-width: 20px;
+  text-align: center;
+}
+
 .community-icon {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  margin-right: 12px;
+  flex-shrink: 0;
 }
 
 .community-info {
@@ -61,18 +80,20 @@
 .community-name {
   font-size: 14px;
   font-weight: 500;
-  color: #1c1c1c;
+  color: var(--color-text-primary);
   text-decoration: none;
   line-height: 18px;
+  transition: color var(--transition-fast);
 }
 
 .community-name:hover {
   text-decoration: underline;
+  color: var(--color-blue);
 }
 
 .community-members {
   font-size: 12px;
-  color: #7c7c7c;
+  color: var(--color-text-secondary);
 }
 
 /* --- See More Button --- */
@@ -81,25 +102,26 @@
   padding: 12px;
   background: transparent;
   border: none;
-  border-top: 1px solid #f0f0f0;
-  color: #0079d3; /* Link blue */
+  border-top: 1px solid var(--color-border-light);
+  color: var(--color-blue);
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
   text-align: left;
   padding-left: 16px;
+  transition: all var(--transition-fast);
 }
 
 .btn-see-more:hover {
-  background-color: #f6f7f8;
+  background-color: var(--color-bg-secondary);
 }
 
 /* --- Footer --- */
 .right-sidebar-footer {
   padding: 12px;
   font-size: 12px;
-  color: #7c7c7c;
-  border: 1px solid transparent; /* Maintains alignment */
+  color: var(--color-text-secondary);
+  border: 1px solid transparent;
 }
 
 .footer-links {

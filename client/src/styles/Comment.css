@@ -1,0 +1,126 @@
+.comment-container {
+  position: relative;
+  padding: 8px 0;
+}
+
+.comment-thread-line {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.comment-thread-line:hover {
+  background-color: var(--color-border);
+}
+
+.comment-container:hover .comment-thread-line {
+  background-color: var(--color-border-light);
+}
+
+.comment-content {
+  padding-left: 12px;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.comment-author {
+  font-weight: 700;
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.comment-author:hover {
+  text-decoration: underline;
+}
+
+.comment-time {
+  color: var(--color-text-secondary);
+}
+
+.comment-body {
+  margin-bottom: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+}
+
+.comment-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.comment-vote-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 2px 4px;
+  transition: color var(--transition-fast);
+}
+
+.comment-vote-btn:hover {
+  color: var(--color-text-primary);
+}
+
+.comment-vote-btn.active-up {
+  color: var(--color-upvote);
+}
+
+.comment-vote-btn.active-down {
+  color: var(--color-downvote);
+}
+
+.comment-vote-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  min-width: 24px;
+}
+
+.comment-action-btn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast);
+}
+
+.comment-action-btn:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.comment-replies {
+  margin-top: 8px;
+}
+
+.expand-comment-btn {
+  background: none;
+  border: none;
+  color: var(--color-blue);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.expand-comment-btn:hover {
+  text-decoration: underline;
+}

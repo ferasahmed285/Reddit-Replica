@@ -1,0 +1,217 @@
+/* Global CSS Reset and Base Styles */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Colors */
+  --color-primary: #ff4500;
+  --color-primary-hover: #ff5414;
+  --color-primary-dark: #d93a00;
+  --color-blue: #0079d3;
+  --color-blue-hover: #0060a8;
+  --color-upvote: #ff4500;
+  --color-downvote: #7193ff;
+  
+  /* Backgrounds */
+  --color-bg-page: #dae0e6;
+  --color-bg-card: #ffffff;
+  --color-bg-hover: #f8f9fa;
+  --color-bg-secondary: #f6f7f8;
+  
+  /* Text */
+  --color-text-primary: #1c1c1c;
+  --color-text-secondary: #7c7c7c;
+  --color-text-meta: #787c7e;
+  
+  /* Borders */
+  --color-border: #ccc;
+  --color-border-light: #edeff1;
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.15);
+  
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow: 0.3s ease;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  background-color: var(--color-bg-page);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  overflow-x: hidden;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--color-blue);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Utility Classes */
+.desktop-only {
+  display: block;
+}
+
+@media (max-width: 960px) {
+  .desktop-only {
+    display: none;
+  }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Focus Styles */
+*:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+
+/* Dark Mode Styles */
+.dark-mode {
+  --color-primary: #ff4500;
+  --color-primary-hover: #ff5414;
+  --color-primary-dark: #d93a00;
+  --color-blue: #4fbcff;
+  --color-blue-hover: #3da5e0;
+  --color-upvote: #ff4500;
+  --color-downvote: #7193ff;
+  
+  /* Dark Backgrounds */
+  --color-bg-page: #030303;
+  --color-bg-card: #1a1a1b;
+  --color-bg-hover: #272729;
+  --color-bg-secondary: #272729;
+  
+  /* Dark Text */
+  --color-text-primary: #d7dadc;
+  --color-text-secondary: #818384;
+  --color-text-meta: #6a6d6f;
+  
+  /* Dark Borders */
+  --color-border: #343536;
+  --color-border-light: #343536;
+  
+  /* Dark Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.dark-mode body {
+  background-color: var(--color-bg-page);
+  color: var(--color-text-primary);
+}
+
+.dark-mode .post-card {
+  background-color: var(--color-bg-card);
+}
+
+.dark-mode .modal-overlay {
+  background-color: rgba(0, 0, 0, 0.85);
+}
+
+.dark-mode .search-input {
+  color: var(--color-text-primary);
+}
+
+.dark-mode .search-input::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.dark-mode .media-container {
+  background-color: #000;
+}
+
+/* Smooth transitions for all elements when switching themes */
+* {
+  transition-property: background-color, border-color, color;
+  transition-duration: var(--transition-normal);
+  transition-timing-function: ease;
+}

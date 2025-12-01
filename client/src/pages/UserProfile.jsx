@@ -1,19 +1,18 @@
-import React from 'react';
 import { useParams } from 'react-router-dom';
 import Sidebar from '../components/layout/Sidebar';
 import PostList from '../components/post/PostList';
-import { getUserByName } from '../data/users'; // You need to implement this import
+import { getUserByName } from '../data/users';
 
-const UserProfile = ({ onAuthAction }) => {
+const UserProfile = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) => {
   const { username } = useParams();
-  const user = getUserByName(username); // Fetch dummy user
+  const user = getUserByName(username);
 
   if (!user) return <div style={{padding: 20}}>User not found</div>;
 
   return (
-    <div style={{ display: 'flex', backgroundColor: '#DAE0E6', minHeight: '100vh' }}>
-      <div style={{ display: 'flex', width: '100%', maxWidth: '1200px', justifyContent: 'center' }}>
-        <Sidebar />
+    <div style={{ display: 'flex', backgroundColor: 'var(--color-bg-page)', minHeight: '100vh' }}>
+      <div style={{ display: 'flex', width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
+        <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
         
         <div style={{ display: 'flex', flex: 1, padding: '20px', gap: '24px' }}>
           {/* Main Feed */}
