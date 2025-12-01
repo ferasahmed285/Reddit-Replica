@@ -1,16 +1,102 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import Sidebar from '../components/layout/Sidebar';
-import { getUserByName } from '../data/users';
-import { posts } from '../data/posts';
-import { getAllCommentsByUser } from '../data/expandedData';
+import { postsAPI, usersAPI, commentsAPI } from '../services/api';
 import { MessageSquare, Cake, Award } from 'lucide-react';
 import '../styles/UserProfilePage.css';
 
 const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) => {
   const { username } = useParams();
-  const user = getUserByName(username);
+  const { currentUser } = useAuth();
+  const { showToast } = useToast();
+  const [user, setUser] = useState(null);
+  const [userPosts, setUserPosts] = useState([]);
+  const [userComments, setUserComments] = useState([]);
+  const [followers, setFollowers] = useState([]);
+  const [followingList, setFollowingList] = useState([]);
+  const [following, setFollowing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        const [userData, allPosts, userCommentsData, followersData, followingData] = await Promise.all([
+          usersAPI.getByUsername(username),
+          postsAPI.getAll(),
+          commentsAPI.getByUser(username),
+          usersAPI.getFollowers(username),
+          usersAPI.getFollowing(username)
+        ]);
+        
+        setUser(userData);
+        // Filter posts by this user
+        const posts = allPosts.filter(p => p.author === username);
+        setUserPosts(posts);
+        setUserComments(userCommentsData);
+        setFollowers(followersData);
+        setFollowingList(followingData);
+        
+        // Check if current user is following this user
+        if (currentUser && currentUser.username !== username) {
+          try {
+            const isFollowingResult = await usersAPI.isFollowing(username);
+            setFollowing(isFollowingResult.following);
+          } catch (err) {
+            console.error('Error checking follow status:', err);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [username, currentUser]);
+
+  const handleFollow = async () => {
+    if (!currentUser) {
+      onAuthAction();
+      return;
+    }
+
+    try {
+      const result = await usersAPI.follow(username);
+      setFollowing(result.following);
+      // Update follower count
+      setUser(prev => ({
+        ...prev,
+        followerCount: result.following 
+          ? (prev.followerCount || 0) + 1 
+          : Math.max((prev.followerCount || 0) - 1, 0)
+      }));
+      // Refresh followers list
+      const followersData = await usersAPI.getFollowers(username);
+      setFollowers(followersData);
+      // Show toast
+      showToast(
+        result.following ? `You're now following u/${username}! 🎉` : `Unfollowed u/${username}`,
+        'success'
+      );
+    } catch (error) {
+      console.error('Error following user:', error);
+      showToast(`Failed to follow: ${error.message}`, 'error');
+      alert(`Failed to follow: ${error.message}`);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center' }}>
+        <h2>Loading...</h2>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -20,9 +106,6 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
       </div>
     );
   }
-
-  const userPosts = posts.filter(p => p.author === user.username);
-  const userComments = getAllCommentsByUser(user.username);
 
   return (
     <div style={{ display: 'flex', backgroundColor: 'var(--color-bg-page)', minHeight: '100vh' }}>
@@ -53,13 +136,23 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
                   </span>
                 </div>
                 {user.bio && <p className="profile-bio">{user.bio}</p>}
+                <div className="profile-stats">
+                  <button className="profile-stat-btn" onClick={() => setActiveTab('followers')}>
+                    {user.followerCount || 0} followers
+                  </button>
+                  <button className="profile-stat-btn" onClick={() => setActiveTab('following')}>
+                    {user.followingCount || 0} following
+                  </button>
+                </div>
               </div>
 
               <div className="profile-actions">
-                <button className="btn-profile-action btn-primary" onClick={onAuthAction}>
-                  Follow
-                </button>
-                <button className="btn-profile-action btn-secondary" onClick={onAuthAction}>
+                {currentUser && currentUser.username !== username && (
+                  <button className="btn-profile-action btn-primary" onClick={handleFollow}>
+                    {following ? 'Unfollow' : 'Follow'}
+                  </button>
+                )}
+                <button className="btn-profile-action btn-secondary">
                   Chat
                 </button>
               </div>
@@ -86,6 +179,18 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
             >
               Comments ({userComments.length})
             </button>
+            <button 
+              className={`profile-tab ${activeTab === 'followers' ? 'active' : ''}`}
+              onClick={() => setActiveTab('followers')}
+            >
+              Followers ({followers.length})
+            </button>
+            <button 
+              className={`profile-tab ${activeTab === 'following' ? 'active' : ''}`}
+              onClick={() => setActiveTab('following')}
+            >
+              Following ({followingList.length})
+            </button>
           </div>
 
           {/* Content */}
@@ -104,29 +209,12 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
                       </div>
                       <h4 className="overview-title">{post.title}</h4>
                       <div className="overview-stats">
-                        <span>{post.votes} upvotes</span>
-                        <span>{post.comments} comments</span>
+                        <span>{post.voteCount} upvotes</span>
+                        <span>{post.commentCount} comments</span>
                       </div>
                     </Link>
                   ))}
                   {userPosts.length === 0 && <p className="empty-state">No posts yet</p>}
-                </div>
-
-                <div className="overview-section">
-                  <h3>Recent Comments</h3>
-                  {userComments.slice(0, 5).map(comment => (
-                    <Link to={`/post/${comment.postId}`} key={comment.id} className="overview-item">
-                      <div className="overview-item-header">
-                        <span className="overview-subreddit">r/{comment.subreddit}</span>
-                        <span className="overview-time">{comment.timeAgo}</span>
-                      </div>
-                      <p className="overview-comment">{comment.content}</p>
-                      <div className="overview-stats">
-                        <span>{comment.voteCount} upvotes</span>
-                      </div>
-                    </Link>
-                  ))}
-                  {userComments.length === 0 && <p className="empty-state">No comments yet</p>}
                 </div>
               </div>
             )}
@@ -150,10 +238,10 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
                       </div>
                     )}
                     <div className="post-card-footer">
-                      <span className="post-stat">{post.votes} upvotes</span>
+                      <span className="post-stat">{post.voteCount} upvotes</span>
                       <span className="post-stat">
                         <MessageSquare size={16} />
-                        {post.comments} comments
+                        {post.commentCount} comments
                       </span>
                     </div>
                   </Link>
@@ -172,24 +260,60 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
                 {userComments.map(comment => (
                   <div key={comment.id} className="user-comment-card">
                     <div className="comment-card-header">
-                      <Link to={`/r/${comment.subreddit}`} className="comment-subreddit">
-                        r/{comment.subreddit}
-                      </Link>
-                      <span className="comment-separator">•</span>
                       <span className="comment-time">{comment.timeAgo}</span>
-                    </div>
-                    <Link to={`/post/${comment.postId}`} className="comment-post-title">
-                      {comment.postTitle}
-                    </Link>
-                    <p className="comment-content">{comment.content}</p>
-                    <div className="comment-card-footer">
                       <span className="comment-votes">{comment.voteCount} points</span>
+                    </div>
+                    <p className="comment-card-content">{comment.content}</p>
+                    <div className="comment-card-footer">
+                      <Link to={`/post/${comment.postId}`} className="comment-post-link">
+                        View Post
+                      </Link>
                     </div>
                   </div>
                 ))}
                 {userComments.length === 0 && (
                   <div className="empty-state-large">
                     <p>u/{user.username} hasn't commented yet</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Followers Tab */}
+            {activeTab === 'followers' && (
+              <div className="profile-users-list">
+                {followers.map(follower => (
+                  <Link to={`/user/${follower.username}`} key={follower.id} className="user-list-card">
+                    <img src={follower.avatar} alt={follower.username} className="user-list-avatar" />
+                    <div className="user-list-info">
+                      <span className="user-list-name">u/{follower.username}</span>
+                      <span className="user-list-karma">{follower.karma} karma</span>
+                    </div>
+                  </Link>
+                ))}
+                {followers.length === 0 && (
+                  <div className="empty-state-large">
+                    <p>u/{user.username} has no followers yet</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Following Tab */}
+            {activeTab === 'following' && (
+              <div className="profile-users-list">
+                {followingList.map(followedUser => (
+                  <Link to={`/user/${followedUser.username}`} key={followedUser.id} className="user-list-card">
+                    <img src={followedUser.avatar} alt={followedUser.username} className="user-list-avatar" />
+                    <div className="user-list-info">
+                      <span className="user-list-name">u/{followedUser.username}</span>
+                      <span className="user-list-karma">{followedUser.karma} karma</span>
+                    </div>
+                  </Link>
+                ))}
+                {followingList.length === 0 && (
+                  <div className="empty-state-large">
+                    <p>u/{user.username} isn't following anyone yet</p>
                   </div>
                 )}
               </div>

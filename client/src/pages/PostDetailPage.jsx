@@ -1,21 +1,99 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/layout/Sidebar';
 import RightSidebar from '../components/layout/RightSidebar';
 import CommentList from '../components/comment/CommentList';
 import VoteButtons from '../components/post/VoteButtons';
-import { posts, allPosts } from '../data/posts';
-import { getCommentsByPostId } from '../data/comments';
+import { postsAPI, commentsAPI } from '../services/api';
 import { getCommunityByName } from '../data/communities';
 import '../styles/PostDetailPage.css';
 
 const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) => {
   const { postId } = useParams();
   const navigate = useNavigate();
-  const allPostsArray = allPosts || posts;
-  const post = allPostsArray.find(p => p.id === parseInt(postId));
+  const { currentUser } = useAuth();
   
+  const [post, setPost] = useState(null);
+  const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [postData, commentsData] = await Promise.all([
+          postsAPI.getById(postId),
+          commentsAPI.getByPostId(postId)
+        ]);
+        setPost(postData);
+        setComments(commentsData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [postId]);
+
+  const handleSavePost = async () => {
+    try {
+      const result = await postsAPI.save(postId);
+      setSaved(result.saved);
+    } catch (error) {
+      console.error('Error saving post:', error);
+    }
+  };
+
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!currentUser) {
+      onAuthAction();
+      return;
+    }
+
+    if (!commentText.trim()) return;
+
+    try {
+      setSubmitting(true);
+      const commentData = {
+        postId: parseInt(postId),
+        content: commentText.trim()
+      };
+      // Only add parentId if it exists
+      // Don't send null as it fails validation
+      
+      const newComment = await commentsAPI.create(commentData);
+      
+      setComments(prev => [...prev, newComment]);
+      setCommentText('');
+      
+      // Update post comment count
+      setPost(prev => ({
+        ...prev,
+        commentCount: (prev.commentCount || 0) + 1
+      }));
+    } catch (error) {
+      console.error('Error submitting comment:', error);
+      alert(`Failed to submit comment: ${error.message}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center' }}>
+        <h2>Loading...</h2>
+      </div>
+    );
+  }
 
   if (!post) {
     return (
@@ -28,13 +106,7 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
     );
   }
 
-  const comments = getCommentsByPostId(post.id) || [];
   const communityData = getCommunityByName(post.subreddit);
-
-  const handleCommentSubmit = (e) => {
-    e.preventDefault();
-    onAuthAction();
-  };
 
   return (
     <div style={{ display: 'flex', backgroundColor: 'var(--color-bg-page)', minHeight: '100vh' }}>
@@ -100,10 +172,10 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
                 {/* Actions */}
                 <div className="post-detail-actions">
                   <button className="action-button">
-                    <span>💬</span> {post.comments} Comments
+                    <span>💬</span> {post.commentCount || 0} Comments
                   </button>
-                  <button className="action-button" onClick={onAuthAction}>
-                    <span>🔖</span> Save
+                  <button className="action-button" onClick={currentUser ? handleSavePost : onAuthAction}>
+                    <span>🔖</span> {saved ? 'Unsave' : 'Save'}
                   </button>
                   <button className="action-button">
                     <span>↪</span> Share
@@ -118,7 +190,9 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
             {/* Comment Input */}
             <div className="comment-input-card">
               <p className="comment-as">
-                Comment as <Link to="/u/guest">u/guest</Link>
+                Comment as <Link to={currentUser ? `/u/${currentUser.username}` : '#'}>
+                  u/{currentUser ? currentUser.username : 'guest'}
+                </Link>
               </p>
               <form onSubmit={handleCommentSubmit}>
                 <textarea
@@ -126,12 +200,13 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
                   placeholder="What are your thoughts?"
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
-                  onClick={onAuthAction}
+                  onFocus={!currentUser ? onAuthAction : undefined}
                   rows="4"
+                  disabled={submitting}
                 />
                 <div className="comment-actions">
-                  <button type="submit" className="btn-comment-submit">
-                    Comment
+                  <button type="submit" className="btn-comment-submit" disabled={submitting || !commentText.trim()}>
+                    {submitting ? 'Posting...' : 'Comment'}
                   </button>
                 </div>
               </form>
@@ -142,6 +217,34 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
               <CommentList 
                 comments={comments} 
                 onAuthRequired={onAuthAction}
+                onReplyAdded={(parentId, newReply) => {
+                  // Add reply to the comments tree
+                  setComments(prev => {
+                    const addReplyToComment = (commentsList) => {
+                      return commentsList.map(comment => {
+                        if (comment.id === parentId) {
+                          return {
+                            ...comment,
+                            replies: [...(comment.replies || []), newReply]
+                          };
+                        } else if (comment.replies) {
+                          return {
+                            ...comment,
+                            replies: addReplyToComment(comment.replies)
+                          };
+                        }
+                        return comment;
+                      });
+                    };
+                    return addReplyToComment(prev);
+                  });
+                  
+                  // Update post comment count
+                  setPost(prev => ({
+                    ...prev,
+                    commentCount: (prev.commentCount || 0) + 1
+                  }));
+                }}
               />
             </div>
           </main>

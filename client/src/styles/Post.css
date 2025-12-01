@@ -179,3 +179,23 @@
   line-height: 1.5;
   font-size: 14px;
 }
+
+/* A
+ctive vote states */
+.icon-btn.up.active {
+  color: var(--color-upvote);
+}
+
+.icon-btn.down.active {
+  color: var(--color-downvote);
+}
+
+/* Joined button state */
+.btn-join-sm.joined {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+.btn-join-sm.joined:hover {
+  background: var(--color-bg-hover);
+}

@@ -1,19 +1,78 @@
 import { useNavigate, Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
+import ShareModal from './ShareModal';
 import '../../styles/Post.css';
 
-const Post = ({ post, onAuthRequired }) => {
+const Post = ({ post, onAuthRequired, onVoteUpdate }) => {
   const navigate = useNavigate();
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [voteState, setVoteState] = useState(null);
+  const [localVoteCount, setLocalVoteCount] = useState(post.voteCount || post.votes);
+  const [joined, setJoined] = useState(false);
+  const { currentUser } = useAuth();
+  const { showToast } = useToast();
   
-  // Restricted Action Handler
-  const handleRestrictedAction = (e) => {
+  // Handle voting
+  const handleVote = async (e, voteType) => {
     e.preventDefault();
-    e.stopPropagation(); // Stop click from opening post details
-    onAuthRequired(); // Trigger login modal
+    e.stopPropagation();
+    
+    if (!currentUser) {
+      onAuthRequired();
+      return;
+    }
+
+    try {
+      const { postsAPI } = await import('../../services/api');
+      const updatedPost = await postsAPI.vote(post.id, voteType);
+      setLocalVoteCount(updatedPost.voteCount);
+      setVoteState(voteType);
+      if (onVoteUpdate) {
+        onVoteUpdate(post.id, updatedPost.voteCount);
+      }
+    } catch (error) {
+      console.error('Vote error:', error);
+    }
+  };
+
+  // Handle join
+  const handleJoin = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!currentUser) {
+      onAuthRequired();
+      return;
+    }
+
+    try {
+      const { communitiesAPI } = await import('../../services/api');
+      const result = await communitiesAPI.join(post.subreddit);
+      setJoined(result.joined);
+      showToast(
+        result.joined ? `Joined r/${post.subreddit}! 🎉` : `Left r/${post.subreddit}`,
+        'success'
+      );
+      // Refresh page after short delay to update sidebar
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (error) {
+      console.error('Join error:', error);
+      showToast(`Failed to join: ${error.message}`, 'error');
+    }
   };
 
   // Navigate to post detail
   const handlePostClick = () => {
     navigate(`/post/${post.id}`);
+  };
+
+  // Handle share button click
+  const handleShareClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsShareModalOpen(true);
   };
 
   return (
@@ -34,7 +93,9 @@ const Post = ({ post, onAuthRequired }) => {
           </Link>
         </div>
         
-        <button className="btn-join-sm" onClick={handleRestrictedAction}>Join</button>
+        <button className={`btn-join-sm ${joined ? 'joined' : ''}`} onClick={handleJoin}>
+          {joined ? 'Joined' : 'Join'}
+        </button>
         <button className="btn-options">•••</button>
       </div>
 
@@ -58,11 +119,17 @@ const Post = ({ post, onAuthRequired }) => {
         
         {/* Vote Pill */}
         <div className="action-pill">
-          <button className="icon-btn up" onClick={handleRestrictedAction}>
+          <button 
+            className={`icon-btn up ${voteState === 'up' ? 'active' : ''}`}
+            onClick={(e) => handleVote(e, 'up')}
+          >
             ⬆
           </button>
-          <span className="vote-count-text">{post.votes}</span>
-          <button className="icon-btn down" onClick={handleRestrictedAction}>
+          <span className="vote-count-text">{localVoteCount}</span>
+          <button 
+            className={`icon-btn down ${voteState === 'down' ? 'active' : ''}`}
+            onClick={(e) => handleVote(e, 'down')}
+          >
             ⬇
           </button>
         </div>
@@ -70,11 +137,11 @@ const Post = ({ post, onAuthRequired }) => {
         {/* Comment Pill */}
         <div className="action-pill">
           <span className="icon-msg">💬</span>
-          <span className="action-text">{post.comments}</span>
+          <span className="action-text">{post.commentCount || post.comments || 0}</span>
         </div>
 
         {/* Share/Award Pills */}
-        <button className="action-pill btn-share">
+        <button className="action-pill btn-share" onClick={handleShareClick}>
           <span className="icon-share">↪</span> Share
         </button>
         
@@ -82,6 +149,13 @@ const Post = ({ post, onAuthRequired }) => {
            💎
         </button>
       </div>
+
+      <ShareModal 
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        postId={post.id}
+        postTitle={post.title}
+      />
     </article>
   );
 };

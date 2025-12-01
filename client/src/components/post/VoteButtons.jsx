@@ -1,16 +1,19 @@
 import { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import '../../styles/VoteButtons.css';
 
 const VoteButtons = ({ initialCount, onVote }) => {
   const [voteState, setVoteState] = useState(null); // null, 'up', or 'down'
   const [count, setCount] = useState(initialCount);
+  const { currentUser } = useAuth();
 
   const handleVote = (type) => {
-    if (onVote) {
-      onVote(); // Trigger auth if not logged in
+    if (!currentUser) {
+      if (onVote) onVote(); // Trigger auth modal if not logged in
       return;
     }
 
+    // User is authenticated, handle the vote
     if (voteState === type) {
       // Remove vote
       setVoteState(null);

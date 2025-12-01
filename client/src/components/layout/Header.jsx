@@ -1,8 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Moon, Sun, Search, X } from 'lucide-react';
+import { Moon, Sun, Search, X, Plus, LogOut, User } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { communities } from '../../data/communities';
 import { users } from '../../data/users';
+import { useAuth } from '../../context/AuthContext';
+import NotificationsDropdown from './NotificationsDropdown';
+import CreatePostModal from '../post/CreatePostModal';
 import '../../styles/Header.css';
 
 const LogoIcon = () => <span className="logo-text">reddit</span>;
@@ -164,6 +167,25 @@ const SearchBar = () => {
 };
 
 const Header = ({ onSearch, onLoginClick, isDarkMode, onToggleDarkMode }) => {
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+  const { currentUser, logout } = useAuth();
+
+  // Debug: Log currentUser on every render
+  console.log('🎯 Header render - currentUser:', currentUser);
+
+  const handleCreatePost = (newPost) => {
+    console.log('New post created:', newPost);
+    // In a real app, this would save to backend/state
+  };
+
+  const handleCreatePostClick = () => {
+    if (!currentUser) {
+      onLoginClick();
+    } else {
+      setIsCreatePostOpen(true);
+    }
+  };
+
   return (
     <header className="header-container">
       {/* Left: Logo */}
@@ -180,6 +202,31 @@ const Header = ({ onSearch, onLoginClick, isDarkMode, onToggleDarkMode }) => {
 
       {/* Right: Actions */}
       <div className="header-right">
+        {/* Debug indicator */}
+        {process.env.NODE_ENV === 'development' && (
+          <div style={{ 
+            padding: '4px 8px', 
+            background: currentUser ? '#4caf50' : '#f44336', 
+            color: 'white', 
+            borderRadius: '4px',
+            fontSize: '12px',
+            marginRight: '8px'
+          }}>
+            {currentUser ? `✓ ${currentUser.username}` : '✗ Not logged in'}
+          </div>
+        )}
+
+        <button 
+          className="btn btn-icon" 
+          onClick={handleCreatePostClick}
+          aria-label="Create Post"
+          title="Create Post"
+        >
+          <Plus size={20} />
+        </button>
+
+        {currentUser && <NotificationsDropdown />}
+
         <button 
           className="btn btn-icon" 
           onClick={onToggleDarkMode}
@@ -193,14 +240,34 @@ const Header = ({ onSearch, onLoginClick, isDarkMode, onToggleDarkMode }) => {
           Get App
         </button>
         
-        <button className="btn btn-primary" onClick={onLoginClick}>
-          Log In
-        </button>
+        {currentUser ? (
+          <>
+            <Link to={`/user/${currentUser.username}`} className="btn btn-secondary" style={{ textDecoration: 'none' }}>
+              <User size={16} style={{ marginRight: '4px' }} />
+              {currentUser.username}
+            </Link>
+            <button className="btn btn-icon" onClick={logout} aria-label="Logout" title="Logout">
+              <LogOut size={20} />
+            </button>
+          </>
+        ) : (
+          <button className="btn btn-primary" onClick={onLoginClick}>
+            Log In
+          </button>
+        )}
         
         <button className="btn btn-icon" aria-label="Options">
           •••
         </button>
       </div>
+
+      {currentUser && (
+        <CreatePostModal 
+          isOpen={isCreatePostOpen}
+          onClose={() => setIsCreatePostOpen(false)}
+          onCreatePost={handleCreatePost}
+        />
+      )}
     </header>
   );
 };

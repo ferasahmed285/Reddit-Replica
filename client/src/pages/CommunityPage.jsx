@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/layout/Sidebar';
 import RightSidebar from '../components/layout/RightSidebar';
 import PostList from '../components/post/PostList';
@@ -11,6 +12,7 @@ const CommunityPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =>
   const { subreddit } = useParams();
   const communityData = getCommunityByName(subreddit);
   const [sortBy, setSortBy] = useState('hot');
+  const { currentUser } = useAuth();
 
   if (!communityData) return <div>Community not found</div>;
 
@@ -30,6 +32,8 @@ const CommunityPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =>
                   bannerUrl={communityData.bannerUrl}
                   iconUrl={communityData.iconUrl}
                   members={communityData.members}
+                  onAuthRequired={onAuthAction}
+                  communityId={subreddit}
                 />
 
                 <div style={{ display: 'flex', padding: '20px 24px', gap: '24px' }}>
@@ -56,11 +60,11 @@ const CommunityPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =>
                           ⬆ Top
                         </button>
                         
-                        {/* Requirement: Trigger Login on Create Post */}
+                        {/* Show Create Post button - triggers login if not authenticated */}
                         <button 
                           className="btn-sort" 
                           style={{ marginLeft: 'auto' }} 
-                          onClick={onAuthAction} 
+                          onClick={currentUser ? () => {/* TODO: Open create post modal */} : onAuthAction} 
                         >
                           + Create Post
                         </button>

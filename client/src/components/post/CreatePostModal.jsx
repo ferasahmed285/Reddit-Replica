@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { X, Image as ImageIcon, Link as LinkIcon, FileText } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { postsAPI } from '../../services/api';
 import { communities } from '../../data/communities';
 import '../../styles/CreatePostModal.css';
 
@@ -10,10 +12,12 @@ const CreatePostModal = ({ isOpen, onClose, onCreatePost }) => {
   const [content, setContent] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!selectedCommunity || !title.trim()) {
@@ -21,30 +25,40 @@ const CreatePostModal = ({ isOpen, onClose, onCreatePost }) => {
       return;
     }
 
-    const newPost = {
-      id: Date.now(),
-      subreddit: selectedCommunity,
-      author: 'yourlocalap',
-      timeAgo: 'just now',
-      timestamp: Date.now(),
-      title: title.trim(),
-      type: postType,
-      content: postType === 'text' ? content.trim() : postType === 'image' ? imageUrl : linkUrl,
-      voteCount: 1,
-      votes: '1',
-      comments: '0',
-    };
+    try {
+      setSubmitting(true);
+      
+      const postData = {
+        subreddit: selectedCommunity,
+        title: title.trim(),
+        type: postType,
+        content: postType === 'text' ? content.trim() : postType === 'image' ? imageUrl : linkUrl,
+      };
 
-    onCreatePost(newPost);
-    
-    // Reset form
-    setTitle('');
-    setContent('');
-    setImageUrl('');
-    setLinkUrl('');
-    setSelectedCommunity('');
-    setPostType('text');
-    onClose();
+      const newPost = await postsAPI.create(postData);
+      
+      // Reset form
+      setTitle('');
+      setContent('');
+      setImageUrl('');
+      setLinkUrl('');
+      setSelectedCommunity('');
+      setPostType('text');
+      
+      onClose();
+      
+      // Navigate to the new post
+      navigate(`/post/${newPost.id}`);
+      
+      if (onCreatePost) {
+        onCreatePost(newPost);
+      }
+    } catch (error) {
+      console.error('Error creating post:', error);
+      alert('Failed to create post. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -163,11 +177,11 @@ const CreatePostModal = ({ isOpen, onClose, onCreatePost }) => {
 
           {/* Actions */}
           <div className="modal-actions">
-            <button type="button" onClick={onClose} className="btn-cancel">
+            <button type="button" onClick={onClose} className="btn-cancel" disabled={submitting}>
               Cancel
             </button>
-            <button type="submit" className="btn-post">
-              Post
+            <button type="submit" className="btn-post" disabled={submitting}>
+              {submitting ? 'Posting...' : 'Post'}
             </button>
           </div>
         </form>

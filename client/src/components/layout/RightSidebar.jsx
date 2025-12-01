@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import '../../styles/RightSidebar.css';
 import { communities } from '../../data/communities';
 
-const RightSidebar = ({ communityData }) => {
+const RightSidebar = ({ communityData, onCreatePost }) => {
   const [showAll, setShowAll] = useState(false);
+  const { currentUser } = useAuth();
   
   // Sort communities by member count (convert string to number for sorting)
   const parseMembers = (memberStr) => {
@@ -57,7 +59,7 @@ const RightSidebar = ({ communityData }) => {
 
             <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '16px 0' }} />
 
-            <button className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>Create Post</button>
+            {/* Hide Create Post button - use header Plus button instead */}
           </div>
         </div>
         

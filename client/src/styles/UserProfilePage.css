@@ -392,3 +392,102 @@
     width: 100%;
   }
 }
+
+
+/* Additional Comment Card Styles */
+.comment-card-content {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  margin-bottom: 12px;
+}
+
+.comment-votes {
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.comment-post-link {
+  color: var(--color-blue);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.comment-post-link:hover {
+  text-decoration: underline;
+}
+
+.profile-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-top: 8px;
+}
+
+
+/* Users List (Followers/Following) */
+.profile-users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.user-list-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--color-bg-card);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  text-decoration: none;
+  transition: all var(--transition-normal);
+}
+
+.user-list-card:hover {
+  border-color: var(--color-text-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.user-list-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-list-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.user-list-name {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: 14px;
+}
+
+.user-list-karma {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+
+/* Profile Stat Buttons */
+.profile-stat-btn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.profile-stat-btn:hover {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-blue);
+}

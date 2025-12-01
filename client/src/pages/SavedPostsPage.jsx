@@ -1,27 +1,72 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/layout/Sidebar';
 import Post from '../components/post/Post';
-import { allPosts } from '../data/posts';
+import { postsAPI } from '../services/api';
 import { communities } from '../data/communities';
 import { Bookmark } from 'lucide-react';
 import '../styles/SavedPostsPage.css';
 
 const SavedPostsPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) => {
-  const [savedPostIds, setSavedPostIds] = useState([]);
+  const [savedPosts, setSavedPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { currentUser } = useAuth();
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('savedPosts') || '[]');
-    setSavedPostIds(saved);
-  }, []);
+    const fetchSavedPosts = async () => {
+      if (!currentUser) {
+        setLoading(false);
+        return;
+      }
 
-  const savedPosts = allPosts.filter(post => savedPostIds.includes(post.id));
+      try {
+        const posts = await postsAPI.getSaved();
+        setSavedPosts(posts);
+      } catch (error) {
+        console.error('Error fetching saved posts:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSavedPosts();
+  }, [currentUser]);
+
+  if (!currentUser) {
+    return (
+      <div style={{ display: 'flex', backgroundColor: 'var(--color-bg-page)', minHeight: '100vh' }}>
+        <div style={{ display: 'flex', width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
+          <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
+          <div style={{ flex: 1, padding: '20px 24px', textAlign: 'center' }}>
+            <h2>Please log in to view saved posts</h2>
+            <button onClick={onAuthAction} className="btn-browse">Log In</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', backgroundColor: 'var(--color-bg-page)', minHeight: '100vh' }}>
+        <div style={{ display: 'flex', width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
+          <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
+          <div style={{ flex: 1, padding: '20px 24px', textAlign: 'center' }}>
+            <h2>Loading...</h2>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const postsWithIcons = savedPosts.map(post => {
     const community = communities.find(c => c.name === `r/${post.subreddit}`);
     return {
       ...post,
-      subredditIcon: community ? community.iconUrl : 'https://placehold.co/20/grey/white?text=r/'
+      subredditIcon: community ? community.iconUrl : 'https://placehold.co/20/grey/white?text=r/',
+      votes: post.voteCount || post.votes,
+      comments: post.commentCount || post.comments,
     };
   });
 

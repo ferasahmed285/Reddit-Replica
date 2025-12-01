@@ -124,3 +124,76 @@
 .expand-comment-btn:hover {
   text-decoration: underline;
 }
+
+
+/* Reply Form Styles */
+.reply-form {
+  margin: 12px 0;
+  padding: 12px;
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.reply-form textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+  min-height: 60px;
+}
+
+.reply-form textarea:focus {
+  outline: none;
+  border-color: var(--color-blue);
+}
+
+.reply-form textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.reply-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.reply-actions button {
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.reply-actions button[type="button"] {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.reply-actions button[type="button"]:hover:not(:disabled) {
+  background-color: var(--color-bg-secondary);
+}
+
+.reply-actions button[type="submit"] {
+  background-color: var(--color-blue);
+  border: none;
+  color: white;
+}
+
+.reply-actions button[type="submit"]:hover:not(:disabled) {
+  background-color: var(--color-blue-hover);
+}
+
+.reply-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

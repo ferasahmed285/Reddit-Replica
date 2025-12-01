@@ -1,7 +1,7 @@
 import Comment from './Comment';
 import '../../styles/CommentList.css';
 
-const CommentList = ({ comments, onAuthRequired }) => {
+const CommentList = ({ comments, onAuthRequired, onReplyAdded }) => {
   if (!comments || comments.length === 0) {
     return (
       <div className="no-comments">
@@ -18,6 +18,7 @@ const CommentList = ({ comments, onAuthRequired }) => {
           key={comment.id} 
           comment={comment} 
           onAuthRequired={onAuthRequired}
+          onReplyAdded={onReplyAdded}
         />
       ))}
     </div>
