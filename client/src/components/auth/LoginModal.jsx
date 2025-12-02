@@ -23,9 +23,10 @@ const LoginModal = ({ isOpen, onClose }) => {
     }
 
     try {
-      const endpoint = isSignUp ? '/api/auth/register' : '/api/auth/login';
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const endpoint = isSignUp ? '/auth/register' : '/auth/login';
       
-      const response = await fetch(`http://localhost:5000${endpoint}`, {
+      const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
