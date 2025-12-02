@@ -8,36 +8,46 @@ const AboutPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
       onToggleSidebar={onToggleSidebar}
     >
       <p>
-        Reddit is a network of communities where people can dive into their interests, 
-        hobbies and passions. There's a community for whatever you're interested in on Reddit.
+        This is a Reddit Replica, a full-stack web application that recreates the core 
+        functionality of Reddit, including communities, posts, comments, voting, and user profiles.
       </p>
       
-      <h2>Our Mission</h2>
+      <h2>University Project</h2>
       <p>
-        Reddit's mission is to bring community, belonging, and empowerment to everyone in the world. 
-        We believe that communities can change your life, and we're building the platform to make that happen.
+        This project was developed as part of a Web Development course at 
+        <strong> Ain Shams University</strong>, Faculty of Computer and Information Sciences.
       </p>
       
-      <h2>How Reddit Works</h2>
-      <p>
-        Reddit is home to thousands of communities, endless conversation, and authentic human connection. 
-        Whether you're into breaking news, sports, TV fan theories, or a never-ending stream of the 
-        internet's cutest animals, there's a community on Reddit for you.
-      </p>
-      
+      <h2>Tech Stack</h2>
       <div className="highlight-box">
-        <p><strong>Founded:</strong> 2005</p>
-        <p><strong>Headquarters:</strong> San Francisco, California</p>
-        <p><strong>Users:</strong> Millions of daily active users worldwide</p>
+        <p><strong>Frontend:</strong> React 19, React Router, Vite</p>
+        <p><strong>Backend:</strong> Node.js, Express, MongoDB</p>
+        <p><strong>Deployment:</strong> Vercel (Frontend), Railway (Backend)</p>
       </div>
       
-      <h2>Our Values</h2>
+      <h2>Team Members</h2>
       <ul>
-        <li>Remember the human</li>
-        <li>Behave like you would in real life</li>
-        <li>Look for the original source of content</li>
-        <li>Search for duplicates before posting</li>
-        <li>Read the community's rules</li>
+        <li>Ahmed Mohamed Naguib</li>
+        <li>Omar Montaser</li>
+        <li>Ferass Ahmed</li>
+        <li>Omar Tarek</li>
+        <li>Ahmed Elmahe</li>
+        <li>Hisham Elhwary</li>
+        <li>Mohamed Fotoh</li>
+      </ul>
+      
+      <h2>Features</h2>
+      <ul>
+        <li>User authentication (register/login)</li>
+        <li>Create and join communities</li>
+        <li>Create posts (text & images)</li>
+        <li>Upvote/downvote system</li>
+        <li>Nested comments</li>
+        <li>User profiles with karma</li>
+        <li>Follow users</li>
+        <li>Custom feeds</li>
+        <li>Real-time notifications</li>
+        <li>Dark mode</li>
       </ul>
     </StaticPage>
   );
