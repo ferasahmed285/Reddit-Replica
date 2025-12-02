@@ -14,10 +14,10 @@ const seedDatabase = async () => {
   try {
     // Connect to MongoDB
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ Connected to MongoDB');
+    console.log('Connected to MongoDB');
 
     // Clear existing data
-    console.log('🗑️  Clearing existing data...');
+    console.log('Clearing existing data...');
     await User.deleteMany({});
     await Community.deleteMany({});
     await Post.deleteMany({});
@@ -26,7 +26,7 @@ const seedDatabase = async () => {
     await UserActivity.deleteMany({});
 
     // Create users
-    console.log('👤 Creating users...');
+    console.log('Creating users...');
     const hashedPassword = await bcrypt.hash('password123', 10);
     
     const usersData = [
@@ -58,7 +58,7 @@ const seedDatabase = async () => {
     console.log(`   Created ${users.length} users`);
 
     // Create communities
-    console.log('🏘️  Creating communities...');
+    console.log('Creating communities...');
     const communitiesData = [
       { name: 'askmen', title: 'AskMen', description: "A place to discuss men's lives and opinions.", memberCount: 1250, creatorIndex: 0, bannerColor: '24292e', iconColor: 'orangered', category: 'Q&As & Stories' },
       { name: 'askwomen', title: 'AskWomen', description: 'A space for women to share their perspectives.', memberCount: 980, creatorIndex: 0, bannerColor: 'pink', iconColor: 'pink', category: 'Q&As & Stories' },
@@ -96,7 +96,7 @@ const seedDatabase = async () => {
     console.log(`   Created ${communities.length} communities`);
 
     // Create posts
-    console.log('📝 Creating posts...');
+    console.log('Creating posts...');
     const postsData = [
       { title: 'Men of Reddit, what is the one compliment you received that you still think about?', type: 'text', content: 'I was told I have nice eyebrows 6 years ago by a cashier. I still think about it weekly.', communityName: 'askmen', authorIndex: 0, upvotes: 44, downvotes: 3 },
       { title: 'How do you balance work and gym?', type: 'text', content: 'I feel like I am always tired after work. Any tips?', communityName: 'askmen', authorIndex: 3, upvotes: 31, downvotes: 5 },
@@ -136,7 +136,7 @@ const seedDatabase = async () => {
     const allPosts = await Post.find({});
 
     // Create comments
-    console.log('💬 Creating comments...');
+    console.log('Creating comments...');
     const commentsData = [
       // Comments for post 0 (Men of Reddit compliment)
       { postIndex: 0, authorIndex: 1, content: 'A girl told me I smell nice 10 years ago. Still using the same cologne.', upvotes: 234, downvotes: 5 },
@@ -203,7 +203,7 @@ const seedDatabase = async () => {
     console.log(`   Created ${commentsData.length} comments`);
 
     // Auto-join users to communities where they have posts or comments
-    console.log('🔗 Auto-joining users to communities...');
+    console.log('Auto-joining users to communities...');
     
     // Track which users should be joined to which communities
     const userCommunityMap = new Map(); // userId -> Set of communityIds
@@ -258,7 +258,7 @@ const seedDatabase = async () => {
     console.log(`   Created ${joinCount} community memberships`);
 
     // Create some sample notifications for CodeNinja (user index 1)
-    console.log('🔔 Creating notifications...');
+    console.log('Creating notifications...');
     const codeNinja = users[1];
     const notificationsData = [
       { type: 'upvote', message: 'Your post "React 19 is coming" received 25 upvotes', link: `/post/${allPosts[2]._id}`, fromIndex: 0 },
@@ -281,14 +281,11 @@ const seedDatabase = async () => {
     }
     console.log(`   Created ${notificationsData.length} notifications`);
 
-    console.log('\n✅ Database seeded successfully!');
-    console.log('\n📋 Demo credentials:');
-    console.log('   Username: CodeNinja');
-    console.log('   Password: password123');
+    console.log('\n Database seeded successfully!');
     
     process.exit(0);
   } catch (error) {
-    console.error('❌ Seed error:', error);
+    console.error('Seed error:', error);
     process.exit(1);
   }
 };
