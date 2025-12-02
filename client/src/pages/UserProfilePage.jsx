@@ -3,8 +3,10 @@ import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import Sidebar from '../components/layout/Sidebar';
+import { UserProfileSkeleton, PostListSkeleton } from '../components/common/LoadingSkeleton';
+import EditProfileModal from '../components/user/EditProfileModal';
 import { postsAPI, usersAPI, commentsAPI } from '../services/api';
-import { MessageSquare, Cake, Award } from 'lucide-react';
+import { MessageSquare, Cake, Award, Bookmark, Settings } from 'lucide-react';
 import '../styles/UserProfilePage.css';
 
 const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) => {
@@ -16,9 +18,13 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
   const [userComments, setUserComments] = useState([]);
   const [followers, setFollowers] = useState([]);
   const [followingList, setFollowingList] = useState([]);
+  const [savedPosts, setSavedPosts] = useState([]);
   const [following, setFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  
+  const isOwnProfile = currentUser && currentUser.username === username;
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -47,6 +53,16 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
             setFollowing(isFollowingResult.following);
           } catch (err) {
             console.error('Error checking follow status:', err);
+          }
+        }
+        
+        // Fetch saved posts if viewing own profile
+        if (currentUser && currentUser.username === username) {
+          try {
+            const saved = await postsAPI.getSaved();
+            setSavedPosts(saved);
+          } catch (err) {
+            console.error('Error fetching saved posts:', err);
           }
         }
       } catch (error) {
@@ -92,8 +108,15 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
 
   if (loading) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center' }}>
-        <h2>Loading...</h2>
+      <div style={{ display: 'flex', backgroundColor: 'var(--color-bg-page)', minHeight: '100vh' }}>
+        <div style={{ display: 'flex', width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
+          <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
+          <div style={{ flex: 1, padding: '20px 24px' }}>
+            <UserProfileSkeleton />
+            <div className="skeleton" style={{ height: '48px', marginBottom: '16px', borderRadius: '8px' }} />
+            <PostListSkeleton count={3} />
+          </div>
+        </div>
       </div>
     );
   }
@@ -152,9 +175,16 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
                     {following ? 'Unfollow' : 'Follow'}
                   </button>
                 )}
-                <button className="btn-profile-action btn-secondary">
-                  Chat
-                </button>
+                {isOwnProfile ? (
+                  <button className="btn-profile-action btn-secondary" onClick={() => setIsEditModalOpen(true)}>
+                    <Settings size={16} />
+                    Edit
+                  </button>
+                ) : (
+                  <button className="btn-profile-action btn-secondary">
+                    Chat
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -191,6 +221,14 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
             >
               Following ({followingList.length})
             </button>
+            {isOwnProfile && (
+              <button 
+                className={`profile-tab ${activeTab === 'saved' ? 'active' : ''}`}
+                onClick={() => setActiveTab('saved')}
+              >
+                Saved ({savedPosts.length})
+              </button>
+            )}
           </div>
 
           {/* Content */}
@@ -318,7 +356,58 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
                 )}
               </div>
             )}
+
+            {/* Saved Tab - Only visible on own profile */}
+            {activeTab === 'saved' && isOwnProfile && (
+              <div className="profile-posts">
+                {savedPosts.map(post => (
+                  <Link to={`/post/${post.id}`} key={post.id} className="user-post-card">
+                    <div className="post-card-header">
+                      <span className="post-subreddit">r/{post.subreddit}</span>
+                      <span className="post-time">{post.timeAgo}</span>
+                    </div>
+                    <h3 className="post-card-title">{post.title}</h3>
+                    {post.type === 'text' && post.content && (
+                      <p className="post-card-preview">{post.content.substring(0, 200)}...</p>
+                    )}
+                    {post.type === 'image' && (
+                      <div className="post-card-image">
+                        <img src={post.content} alt={post.title} />
+                      </div>
+                    )}
+                    <div className="post-card-footer">
+                      <span className="post-stat">{post.voteCount} upvotes</span>
+                      <span className="post-stat">
+                        <MessageSquare size={16} />
+                        {post.commentCount} comments
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+                {savedPosts.length === 0 && (
+                  <div className="empty-state-large">
+                    <Bookmark size={48} className="empty-icon" />
+                    <p>You haven't saved any posts yet</p>
+                    <span className="empty-hint">Posts you save will appear here</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
+
+          {/* Edit Profile Modal */}
+          <EditProfileModal
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            user={user}
+            onProfileUpdated={(updatedUser) => {
+              setUser(prev => ({ ...prev, ...updatedUser }));
+              // Reload page if username changed
+              if (updatedUser.username !== username) {
+                window.location.href = `/user/${updatedUser.username}`;
+              }
+            }}
+          />
         </div>
       </div>
     </div>

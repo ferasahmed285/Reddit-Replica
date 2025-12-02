@@ -1,11 +1,16 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const connectDB = require('./config/database');
 const authRoutes = require('./routes/auth');
 const postsRoutes = require('./routes/posts');
 const communitiesRoutes = require('./routes/communities');
 const commentsRoutes = require('./routes/comments');
 const usersRoutes = require('./routes/users');
+const notificationsRoutes = require('./routes/notifications');
+
+// Connect to MongoDB
+connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,8 +20,8 @@ app.use(cors({
   origin: 'http://localhost:5173', // Vite default port
   credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -30,6 +35,7 @@ app.use('/api/posts', postsRoutes);
 app.use('/api/communities', communitiesRoutes);
 app.use('/api/comments', commentsRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -57,27 +63,27 @@ app.use((err, req, res, next) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`\n🚀 Server is running on http://localhost:${PORT}`);
-  console.log(`📝 Environment: ${process.env.NODE_ENV}`);
-  console.log(`\n📍 Auth endpoints:`);
-  console.log(`   POST http://localhost:${PORT}/api/auth/register`);
-  console.log(`   POST http://localhost:${PORT}/api/auth/login`);
-  console.log(`   GET  http://localhost:${PORT}/api/auth/me`);
-  console.log(`   POST http://localhost:${PORT}/api/auth/logout`);
-  console.log(`\n📍 Posts endpoints:`);
-  console.log(`   GET  http://localhost:${PORT}/api/posts`);
-  console.log(`   POST http://localhost:${PORT}/api/posts (protected)`);
-  console.log(`   POST http://localhost:${PORT}/api/posts/:id/vote (protected)`);
-  console.log(`\n📍 Communities endpoints:`);
-  console.log(`   GET  http://localhost:${PORT}/api/communities`);
-  console.log(`   POST http://localhost:${PORT}/api/communities (protected)`);
-  console.log(`   POST http://localhost:${PORT}/api/communities/:id/join (protected)`);
-  console.log(`\n📍 Comments endpoints:`);
-  console.log(`   GET  http://localhost:${PORT}/api/comments?postId=:id`);
-  console.log(`   POST http://localhost:${PORT}/api/comments (protected)`);
-  console.log(`   POST http://localhost:${PORT}/api/comments/:id/vote (protected)`);
-  console.log(`\n💡 Demo credentials:`);
-  console.log(`   Username: CodeNinja`);
-  console.log(`   Password: password123\n`);
+  // console.log(`📝 Environment: ${process.env.NODE_ENV}`);
+  // console.log(`\n📍 Auth endpoints:`);
+  // console.log(`   POST http://localhost:${PORT}/api/auth/register`);
+  // console.log(`   POST http://localhost:${PORT}/api/auth/login`);
+  // console.log(`   GET  http://localhost:${PORT}/api/auth/me`);
+  // console.log(`   POST http://localhost:${PORT}/api/auth/logout`);
+  // console.log(`\n📍 Posts endpoints:`);
+  // console.log(`   GET  http://localhost:${PORT}/api/posts`);
+  // console.log(`   POST http://localhost:${PORT}/api/posts (protected)`);
+  // console.log(`   POST http://localhost:${PORT}/api/posts/:id/vote (protected)`);
+  // console.log(`\n📍 Communities endpoints:`);
+  // console.log(`   GET  http://localhost:${PORT}/api/communities`);
+  // console.log(`   POST http://localhost:${PORT}/api/communities (protected)`);
+  // console.log(`   POST http://localhost:${PORT}/api/communities/:id/join (protected)`);
+  // console.log(`\n📍 Comments endpoints:`);
+  // console.log(`   GET  http://localhost:${PORT}/api/comments?postId=:id`);
+  // console.log(`   POST http://localhost:${PORT}/api/comments (protected)`);
+  // console.log(`   POST http://localhost:${PORT}/api/comments/:id/vote (protected)`);
+  // console.log(`\n💡 Demo credentials:`);
+  // console.log(`   Username: CodeNinja`);
+  // console.log(`   Password: password123\n`);
 });
 
 module.exports = app;

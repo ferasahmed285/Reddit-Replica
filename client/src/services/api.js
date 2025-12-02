@@ -38,6 +38,15 @@ export const postsAPI = {
     body: JSON.stringify(postData),
   }),
   
+  update: (postId, postData) => apiRequest(`/posts/${postId}`, {
+    method: 'PUT',
+    body: JSON.stringify(postData),
+  }),
+  
+  delete: (postId) => apiRequest(`/posts/${postId}`, {
+    method: 'DELETE',
+  }),
+  
   vote: (postId, voteType) => apiRequest(`/posts/${postId}/vote`, {
     method: 'POST',
     body: JSON.stringify({ vote: voteType }),
@@ -61,6 +70,15 @@ export const commentsAPI = {
     body: JSON.stringify(commentData),
   }),
   
+  update: (commentId, content) => apiRequest(`/comments/${commentId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ content }),
+  }),
+  
+  delete: (commentId) => apiRequest(`/comments/${commentId}`, {
+    method: 'DELETE',
+  }),
+  
   vote: (commentId, voteType) => apiRequest(`/comments/${commentId}/vote`, {
     method: 'POST',
     body: JSON.stringify({ vote: voteType }),
@@ -76,6 +94,15 @@ export const communitiesAPI = {
   create: (communityData) => apiRequest('/communities', {
     method: 'POST',
     body: JSON.stringify(communityData),
+  }),
+  
+  update: (communityId, communityData) => apiRequest(`/communities/${communityId}`, {
+    method: 'PUT',
+    body: JSON.stringify(communityData),
+  }),
+  
+  delete: (communityId) => apiRequest(`/communities/${communityId}`, {
+    method: 'DELETE',
   }),
   
   join: (communityId) => apiRequest(`/communities/${communityId}/join`, {
@@ -105,4 +132,19 @@ export const usersAPI = {
 // User Activity API
 export const userActivityAPI = {
   getJoinedCommunities: () => apiRequest('/communities/user/joined'),
+};
+
+// Notifications API
+export const notificationsAPI = {
+  getAll: () => apiRequest('/notifications'),
+  
+  getUnreadCount: () => apiRequest('/notifications/unread-count'),
+  
+  markAsRead: (id) => apiRequest(`/notifications/${id}/read`, {
+    method: 'PUT',
+  }),
+  
+  markAllAsRead: () => apiRequest('/notifications/read-all', {
+    method: 'PUT',
+  }),
 };

@@ -1,11 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from '../components/layout/Sidebar';
-import { communities, communityCategories } from '../data/communities';
+import { communitiesAPI } from '../services/api';
 import '../styles/ExplorePage.css';
+
+const communityCategories = ['All', 'Technology', 'Gaming', 'Entertainment', 'Sports', 'News', 'Q&As & Stories'];
 
 const ExplorePage = ({ isSidebarCollapsed, onToggleSidebar }) => {
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [communities, setCommunities] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCommunities = async () => {
+      try {
+        setLoading(true);
+        const data = await communitiesAPI.getAll();
+        setCommunities(data);
+      } catch (error) {
+        console.error('Error fetching communities:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCommunities();
+  }, []);
 
   const filteredCommunities = selectedCategory === 'All' 
     ? communities 
@@ -32,34 +51,40 @@ const ExplorePage = ({ isSidebarCollapsed, onToggleSidebar }) => {
             ))}
           </div>
 
-          {/* Communities Grid */}
-          <div className="communities-grid">
-            {filteredCommunities.map((community) => (
-              <Link 
-                to={`/r/${community.id}`} 
-                key={community.id} 
-                className="community-card"
-              >
-                <div className="community-card-banner" style={{ backgroundImage: `url(${community.bannerUrl})` }} />
-                <div className="community-card-content">
-                  <img src={community.iconUrl} alt={community.name} className="community-card-icon" />
-                  <h3 className="community-card-name">{community.name}</h3>
-                  <p className="community-card-description">{community.description}</p>
-                  <div className="community-card-stats">
-                    <span className="community-stat">{community.members} members</span>
-                    <span className="community-stat-dot">•</span>
-                    <span className="community-stat">{community.online} online</span>
-                  </div>
-                  <span className="community-category-tag">{community.category}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
+          {loading ? (
+            <div className="loading-state">Loading communities...</div>
+          ) : (
+            <>
+              {/* Communities Grid */}
+              <div className="communities-grid">
+                {filteredCommunities.map((community) => (
+                  <Link 
+                    to={`/r/${community.name}`} 
+                    key={community._id || community.name} 
+                    className="community-card"
+                  >
+                    <div className="community-card-banner" style={{ backgroundImage: `url(${community.bannerUrl})` }} />
+                    <div className="community-card-content">
+                      <img src={community.iconUrl} alt={community.displayName || community.name} className="community-card-icon" />
+                      <h3 className="community-card-name">r/{community.name}</h3>
+                      <p className="community-card-description">{community.description}</p>
+                      <div className="community-card-stats">
+                        <span className="community-stat">{community.members || community.memberCount} members</span>
+                        <span className="community-stat-dot">•</span>
+                        <span className="community-stat">{community.online || '1'} online</span>
+                      </div>
+                      {community.category && <span className="community-category-tag">{community.category}</span>}
+                    </div>
+                  </Link>
+                ))}
+              </div>
 
-          {filteredCommunities.length === 0 && (
-            <div className="no-communities">
-              <p>No communities found in this category</p>
-            </div>
+              {filteredCommunities.length === 0 && (
+                <div className="no-communities">
+                  <p>No communities found in this category</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

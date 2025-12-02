@@ -1,41 +1,62 @@
 import { useState, useEffect } from 'react';
 import Post from './Post';
-import { postsAPI } from '../../services/api';
-import { communities } from '../../data/communities';
+import { PostListSkeleton } from '../common/LoadingSkeleton';
+import { postsAPI, communitiesAPI } from '../../services/api';
+import { useLoading } from '../../context/LoadingContext';
 
 const PostList = ({ filterBySubreddit, filterByAuthor, sortBy, onAuthRequired }) => {
   const [posts, setPosts] = useState([]);
+  const [communities, setCommunities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { startLoading, stopLoading } = useLoading();
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await postsAPI.getAll(filterBySubreddit);
-        setPosts(data);
+        startLoading();
+        const [postsData, communitiesData] = await Promise.all([
+          postsAPI.getAll(filterBySubreddit),
+          communitiesAPI.getAll()
+        ]);
+        setPosts(postsData);
+        setCommunities(communitiesData);
         setError(null);
       } catch (err) {
-        console.error('Error fetching posts:', err);
+        console.error('Error fetching data:', err);
         setError(err.message);
       } finally {
         setLoading(false);
+        stopLoading();
       }
     };
 
-    fetchPosts();
+    fetchData();
   }, [filterBySubreddit]);
 
   const handleVoteUpdate = (postId, newVoteCount) => {
     setPosts(prevPosts =>
       prevPosts.map(post =>
-        post.id === postId ? { ...post, voteCount: newVoteCount } : post
+        (post.id === postId || post._id === postId) ? { ...post, voteCount: newVoteCount } : post
+      )
+    );
+  };
+
+  const handlePostDeleted = (postId) => {
+    setPosts(prevPosts => prevPosts.filter(post => post.id !== postId && post._id !== postId));
+  };
+
+  const handlePostUpdated = (updatedPost) => {
+    setPosts(prevPosts =>
+      prevPosts.map(post =>
+        (post.id === updatedPost.id || post._id === updatedPost._id) ? { ...post, ...updatedPost } : post
       )
     );
   };
 
   if (loading) {
-    return <div style={{ padding: '20px', textAlign: 'center' }}>Loading posts...</div>;
+    return <PostListSkeleton count={5} />;
   }
 
   if (error) {
@@ -57,7 +78,11 @@ const PostList = ({ filterBySubreddit, filterByAuthor, sortBy, onAuthRequired })
 
   // Attach community icons
   const postsWithIcons = displayPosts.map(post => {
-    const community = communities.find(c => c.name === `r/${post.subreddit}`);
+    const community = communities.find(c => 
+      c.name === post.subreddit || 
+      c.name === post.communityName ||
+      c.name === `r/${post.subreddit}`
+    );
     return {
       ...post,
       subredditIcon: community ? community.iconUrl : 'https://placehold.co/20/grey/white?text=r/',
@@ -78,6 +103,8 @@ const PostList = ({ filterBySubreddit, filterByAuthor, sortBy, onAuthRequired })
           post={post} 
           onAuthRequired={onAuthRequired}
           onVoteUpdate={handleVoteUpdate}
+          onPostDeleted={handlePostDeleted}
+          onPostUpdated={handlePostUpdated}
         />
       ))}
     </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { X, Smartphone, Globe, Apple } from 'lucide-react';
 import '../../styles/LoginModal.css';
 
 const LoginModal = ({ isOpen, onClose }) => {
@@ -35,10 +36,6 @@ const LoginModal = ({ isOpen, onClose }) => {
       const data = await response.json();
 
       if (response.ok) {
-        // Successful login/signup
-        console.log('📥 Login response data:', data);
-        console.log('📥 User data:', data.user);
-        console.log('📥 Token:', data.token);
         login(data.user, data.token);
         setUsername('');
         setPassword('');
@@ -67,7 +64,7 @@ const LoginModal = ({ isOpen, onClose }) => {
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         
         <button className="modal-close-btn" onClick={onClose}>
-          ✕
+          <X size={20} />
         </button>
 
         <div className="modal-header">
@@ -79,13 +76,13 @@ const LoginModal = ({ isOpen, onClose }) => {
 
         <div className="auth-buttons">
           <button className="btn-auth">
-            <span className="icon">📱</span> Continue With Phone Number
+            <Smartphone size={20} /> Continue With Phone Number
           </button>
           <button className="btn-auth">
-            <span className="icon">G</span> Continue With Google
+            <Globe size={20} /> Continue With Google 
           </button>
           <button className="btn-auth">
-            <span className="icon"></span> Continue With Apple
+            <Apple size={20} /> Continue With Apple
           </button>
         </div>
 

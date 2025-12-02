@@ -65,23 +65,43 @@
 .comment-vote-btn {
   background: none;
   border: none;
-  font-size: 16px;
   color: var(--color-text-secondary);
   cursor: pointer;
-  padding: 2px 4px;
-  transition: color var(--transition-fast);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.comment-vote-btn:hover {
-  color: var(--color-text-primary);
+.comment-vote-btn:hover:not(:disabled) {
+  background-color: var(--color-bg-secondary);
+}
+
+.comment-vote-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
 }
 
 .comment-vote-btn.active-up {
   color: var(--color-upvote);
 }
 
+.comment-vote-btn.active-up svg {
+  transform: scale(1.1);
+}
+
 .comment-vote-btn.active-down {
   color: var(--color-downvote);
+}
+
+.comment-vote-btn.active-down svg {
+  transform: scale(1.1);
+}
+
+.comment-vote-btn svg {
+  transition: all var(--transition-fast);
 }
 
 .comment-vote-count {
@@ -89,6 +109,16 @@
   font-weight: 700;
   color: var(--color-text-primary);
   min-width: 24px;
+  text-align: center;
+  transition: color var(--transition-fast);
+}
+
+.comment-vote-count.upvoted {
+  color: var(--color-upvote);
+}
+
+.comment-vote-count.downvoted {
+  color: var(--color-downvote);
 }
 
 .comment-action-btn {
@@ -194,6 +224,159 @@
 }
 
 .reply-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+/* Edited badge */
+.comment-edited {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+/* Comment Options Menu */
+.comment-options-wrapper {
+  position: relative;
+}
+
+.comment-options-menu {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 4px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  min-width: 140px;
+  z-index: 100;
+  overflow: hidden;
+  animation: fadeInUp 0.15s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.comment-option-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.comment-option-item:hover {
+  background: var(--color-bg-secondary);
+}
+
+.comment-option-item svg {
+  color: var(--color-text-secondary);
+}
+
+.comment-option-item:hover svg {
+  color: var(--color-text-primary);
+}
+
+.comment-option-danger {
+  color: #ff4444;
+}
+
+.comment-option-danger:hover {
+  background: rgba(255, 68, 68, 0.1);
+}
+
+.comment-option-danger svg {
+  color: #ff4444;
+}
+
+.comment-option-disabled {
+  color: var(--color-text-secondary);
+  cursor: default;
+  font-size: 12px;
+}
+
+.comment-option-disabled:hover {
+  background: transparent;
+}
+
+/* Edit Comment Form */
+.edit-comment-form {
+  margin-bottom: 8px;
+}
+
+.edit-comment-form textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+  min-height: 60px;
+}
+
+.edit-comment-form textarea:focus {
+  outline: none;
+  border-color: var(--color-blue);
+  background-color: var(--color-bg-card);
+}
+
+.edit-comment-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.edit-comment-actions button {
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.edit-comment-actions button[type="button"] {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.edit-comment-actions button[type="button"]:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.edit-comment-actions button[type="submit"] {
+  background-color: var(--color-blue);
+  border: none;
+  color: white;
+}
+
+.edit-comment-actions button[type="submit"]:hover:not(:disabled) {
+  background-color: var(--color-blue-hover);
+}
+
+.edit-comment-actions button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

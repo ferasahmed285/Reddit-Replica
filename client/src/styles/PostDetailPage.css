@@ -213,3 +213,112 @@
     font-size: 20px;
   }
 }
+
+
+/* Back button with icon */
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Options wrapper */
+.post-options-wrapper {
+  position: relative;
+}
+
+/* Options menu */
+.post-detail-options-menu {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 4px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  min-width: 160px;
+  z-index: 100;
+  overflow: hidden;
+  animation: fadeInUp 0.15s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.post-detail-options-menu .options-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.post-detail-options-menu .options-item:hover {
+  background: var(--color-bg-secondary);
+}
+
+.post-detail-options-menu .options-item svg {
+  color: var(--color-text-secondary);
+}
+
+.post-detail-options-menu .options-item:hover svg {
+  color: var(--color-text-primary);
+}
+
+.post-detail-options-menu .options-item-danger {
+  color: #ff4444;
+}
+
+.post-detail-options-menu .options-item-danger:hover {
+  background: rgba(255, 68, 68, 0.1);
+}
+
+.post-detail-options-menu .options-item-danger svg {
+  color: #ff4444;
+}
+
+.post-detail-options-menu .options-item-disabled {
+  color: var(--color-text-secondary);
+  cursor: default;
+  font-size: 13px;
+}
+
+.post-detail-options-menu .options-item-disabled:hover {
+  background: transparent;
+}
+
+/* Edited badge */
+.post-edited-badge {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  margin-top: 8px;
+}
+
+/* Action button icon alignment */
+.action-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.action-button span {
+  font-size: 12px;
+}

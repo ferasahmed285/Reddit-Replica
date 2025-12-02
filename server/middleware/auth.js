@@ -17,4 +17,24 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-module.exports = { authenticateToken };
+// Optional authentication - doesn't fail if no token, just sets req.user if valid
+const optionalAuth = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      req.user = null;
+    } else {
+      req.user = user;
+    }
+    next();
+  });
+};
+
+module.exports = { authenticateToken, optionalAuth };

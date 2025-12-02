@@ -1,8 +1,8 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
-const { findUserByUsername, findUserById, createUser } = require('../data/users');
+const User = require('../models/User');
+const UserActivity = require('../models/UserActivity');
 const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
@@ -10,16 +10,10 @@ const router = express.Router();
 // Helper function to generate JWT token
 const generateToken = (user) => {
   return jwt.sign(
-    { id: user.id, username: user.username },
+    { id: user._id.toString(), username: user.username },
     process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
-};
-
-// Helper function to sanitize user data (remove password)
-const sanitizeUser = (user) => {
-  const { password, ...userWithoutPassword } = user;
-  return userWithoutPassword;
 };
 
 // POST /api/auth/register
@@ -38,7 +32,6 @@ router.post(
   ],
   async (req, res) => {
     try {
-      // Validate input
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ 
@@ -50,26 +43,22 @@ router.post(
       const { username, password } = req.body;
 
       // Check if user already exists
-      const existingUser = findUserByUsername(username);
+      const existingUser = await User.findOne({ username: { $regex: new RegExp(`^${username}$`, 'i') } });
       if (existingUser) {
         return res.status(409).json({ message: 'Username already exists' });
       }
 
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, 10);
+      // Create new user (password is hashed by pre-save hook)
+      const newUser = await User.create({ username, password });
 
-      // Create new user
-      const newUser = createUser({
-        username,
-        password: hashedPassword
-      });
+      // Create user activity record
+      await UserActivity.create({ user: newUser._id });
 
       // Generate token
       const token = generateToken(newUser);
 
-      // Return user data and token
       res.status(201).json({
-        user: sanitizeUser(newUser),
+        user: newUser.toJSON(),
         token
       });
     } catch (error) {
@@ -88,7 +77,6 @@ router.post(
   ],
   async (req, res) => {
     try {
-      // Validate input
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ 
@@ -99,24 +87,14 @@ router.post(
 
       const { username, password } = req.body;
 
-      // Find user
-      const user = findUserByUsername(username);
+      // Find user (case-insensitive)
+      const user = await User.findOne({ username: { $regex: new RegExp(`^${username}$`, 'i') } });
       if (!user) {
         return res.status(401).json({ message: 'Invalid username or password' });
       }
 
-      // For demo users with pre-hashed passwords, accept "password123"
-      // For new users, verify with bcrypt
-      let isValidPassword = false;
-      
-      if (password === 'password123' && user.password.startsWith('$2a$10$XQKvvXQKvv')) {
-        // Demo user with default password
-        isValidPassword = true;
-      } else {
-        // Real password verification
-        isValidPassword = await bcrypt.compare(password, user.password);
-      }
-
+      // Verify password
+      const isValidPassword = await user.comparePassword(password);
       if (!isValidPassword) {
         return res.status(401).json({ message: 'Invalid username or password' });
       }
@@ -124,9 +102,8 @@ router.post(
       // Generate token
       const token = generateToken(user);
 
-      // Return user data and token
       res.status(200).json({
-        user: sanitizeUser(user),
+        user: user.toJSON(),
         token
       });
     } catch (error) {
@@ -137,15 +114,15 @@ router.post(
 );
 
 // GET /api/auth/me - Get current user
-router.get('/me', authenticateToken, (req, res) => {
+router.get('/me', authenticateToken, async (req, res) => {
   try {
-    const user = findUserById(req.user.id);
+    const user = await User.findById(req.user.id);
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.status(200).json(sanitizeUser(user));
+    res.status(200).json(user.toJSON());
   } catch (error) {
     console.error('Get user error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -154,8 +131,6 @@ router.get('/me', authenticateToken, (req, res) => {
 
 // POST /api/auth/logout
 router.post('/logout', authenticateToken, (req, res) => {
-  // In a real app with refresh tokens, you'd invalidate them here
-  // For JWT-only auth, logout is handled client-side by removing the token
   res.status(200).json({ message: 'Logged out successfully' });
 });
 

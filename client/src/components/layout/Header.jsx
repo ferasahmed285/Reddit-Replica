@@ -1,9 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Moon, Sun, Search, X, Plus, LogOut, User } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
-import { communities } from '../../data/communities';
-import { users } from '../../data/users';
 import { useAuth } from '../../context/AuthContext';
+import { communitiesAPI } from '../../services/api';
 import NotificationsDropdown from './NotificationsDropdown';
 import CreatePostModal from '../post/CreatePostModal';
 import '../../styles/Header.css';
@@ -14,8 +13,22 @@ const SearchBar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [communities, setCommunities] = useState([]);
   const navigate = useNavigate();
   const searchRef = useRef(null);
+
+  // Fetch communities for search suggestions
+  useEffect(() => {
+    const fetchCommunities = async () => {
+      try {
+        const data = await communitiesAPI.getAll();
+        setCommunities(data);
+      } catch (error) {
+        console.error('Error fetching communities:', error);
+      }
+    };
+    fetchCommunities();
+  }, []);
 
   // Get suggestions based on query
   const getSuggestions = () => {
@@ -24,20 +37,16 @@ const SearchBar = () => {
     const query = searchQuery.toLowerCase();
     const matchingCommunities = communities
       .filter(c => 
-        c.name.toLowerCase().includes(query) || 
-        c.title.toLowerCase().includes(query)
+        c.name?.toLowerCase().includes(query) || 
+        c.title?.toLowerCase().includes(query)
       )
       .slice(0, 5);
     
-    const matchingUsers = users
-      .filter(u => u.username.toLowerCase().includes(query))
-      .slice(0, 3);
-    
-    return { communities: matchingCommunities, users: matchingUsers };
+    return { communities: matchingCommunities, users: [] };
   };
 
   const suggestions = getSuggestions();
-  const hasSuggestions = suggestions.communities.length > 0 || suggestions.users.length > 0;
+  const hasSuggestions = suggestions.communities.length > 0;
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -110,8 +119,8 @@ const SearchBar = () => {
                   <div className="suggestions-header">Communities</div>
                   {suggestions.communities.map(community => (
                     <Link
-                      key={community.id}
-                      to={`/r/${community.id}`}
+                      key={community._id || community.name}
+                      to={`/r/${community.name}`}
                       className="suggestion-item"
                       onClick={() => {
                         setShowSuggestions(false);
@@ -121,33 +130,8 @@ const SearchBar = () => {
                     >
                       <img src={community.iconUrl} alt="" className="suggestion-icon" />
                       <div className="suggestion-info">
-                        <div className="suggestion-name">{community.name}</div>
-                        <div className="suggestion-meta">{community.members} members</div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-
-              {/* Users */}
-              {suggestions.users.length > 0 && (
-                <div className="suggestions-section">
-                  <div className="suggestions-header">Users</div>
-                  {suggestions.users.map(user => (
-                    <Link
-                      key={user.username}
-                      to={`/user/${user.username}`}
-                      className="suggestion-item"
-                      onClick={() => {
-                        setShowSuggestions(false);
-                        setIsFocused(false);
-                        setSearchQuery('');
-                      }}
-                    >
-                      <img src={user.avatar} alt="" className="suggestion-icon" />
-                      <div className="suggestion-info">
-                        <div className="suggestion-name">u/{user.username}</div>
-                        <div className="suggestion-meta">{user.karma} karma</div>
+                        <div className="suggestion-name">r/{community.name}</div>
+                        <div className="suggestion-meta">{community.members || community.memberCount} members</div>
                       </div>
                     </Link>
                   ))}
@@ -166,17 +150,9 @@ const SearchBar = () => {
   );
 };
 
-const Header = ({ onSearch, onLoginClick, isDarkMode, onToggleDarkMode }) => {
+const Header = ({ onLoginClick, isDarkMode, onToggleDarkMode }) => {
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const { currentUser, logout } = useAuth();
-
-  // Debug: Log currentUser on every render
-  console.log('🎯 Header render - currentUser:', currentUser);
-
-  const handleCreatePost = (newPost) => {
-    console.log('New post created:', newPost);
-    // In a real app, this would save to backend/state
-  };
 
   const handleCreatePostClick = () => {
     if (!currentUser) {
@@ -202,20 +178,6 @@ const Header = ({ onSearch, onLoginClick, isDarkMode, onToggleDarkMode }) => {
 
       {/* Right: Actions */}
       <div className="header-right">
-        {/* Debug indicator */}
-        {process.env.NODE_ENV === 'development' && (
-          <div style={{ 
-            padding: '4px 8px', 
-            background: currentUser ? '#4caf50' : '#f44336', 
-            color: 'white', 
-            borderRadius: '4px',
-            fontSize: '12px',
-            marginRight: '8px'
-          }}>
-            {currentUser ? `✓ ${currentUser.username}` : '✗ Not logged in'}
-          </div>
-        )}
-
         <button 
           className="btn btn-icon" 
           onClick={handleCreatePostClick}
@@ -235,10 +197,6 @@ const Header = ({ onSearch, onLoginClick, isDarkMode, onToggleDarkMode }) => {
         >
           {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
         </button>
-
-        <button className="btn btn-secondary" aria-label="Get App">
-          Get App
-        </button>
         
         {currentUser ? (
           <>
@@ -255,17 +213,16 @@ const Header = ({ onSearch, onLoginClick, isDarkMode, onToggleDarkMode }) => {
             Log In
           </button>
         )}
-        
-        <button className="btn btn-icon" aria-label="Options">
-          •••
-        </button>
       </div>
 
       {currentUser && (
         <CreatePostModal 
           isOpen={isCreatePostOpen}
           onClose={() => setIsCreatePostOpen(false)}
-          onCreatePost={handleCreatePost}
+          onPostCreated={() => {
+            setIsCreatePostOpen(false);
+            window.location.reload();
+          }}
         />
       )}
     </header>

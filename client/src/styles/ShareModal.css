@@ -1,16 +1,50 @@
+/* Share Modal Overlay */
+.share-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .share-modal-content {
   background: var(--color-bg-card);
   border-radius: var(--radius-xl);
   width: 90%;
-  max-width: 480px;
+  max-width: 420px;
   padding: 24px;
+  position: relative;
+  animation: slideUp 0.3s ease-out;
+  box-shadow: var(--shadow-lg);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .share-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .share-modal-header h3 {
@@ -18,6 +52,24 @@
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
+}
+
+.share-modal-close {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.share-modal-close:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
 }
 
 .share-options {

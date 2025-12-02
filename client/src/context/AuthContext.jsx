@@ -6,11 +6,6 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Debug: Log whenever currentUser changes
-  useEffect(() => {
-    console.log('👤 AuthContext - currentUser changed:', currentUser);
-  }, [currentUser]);
-
   // Check if user is logged in on mount
   useEffect(() => {
     const checkAuth = async () => {
@@ -40,10 +35,8 @@ export const AuthProvider = ({ children }) => {
 
   // Login - to be called after successful backend authentication
   const login = (userData, token) => {
-    console.log('🔐 Login called with:', { userData, token });
     setCurrentUser(userData);
     localStorage.setItem('authToken', token);
-    console.log('✅ User state updated:', userData);
   };
 
   // Logout
@@ -61,10 +54,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Update user data (for profile edits)
+  const updateUser = (userData) => {
+    setCurrentUser(prev => ({ ...prev, ...userData }));
+  };
+
   const value = {
     currentUser,
     login,
     logout,
+    updateUser,
     loading,
   };
 

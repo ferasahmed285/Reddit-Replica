@@ -1,12 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { MessageSquare, Bookmark, Share2, MoreHorizontal, Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { useLoading } from '../context/LoadingContext';
 import Sidebar from '../components/layout/Sidebar';
 import RightSidebar from '../components/layout/RightSidebar';
 import CommentList from '../components/comment/CommentList';
 import VoteButtons from '../components/post/VoteButtons';
+import ShareModal from '../components/post/ShareModal';
+import EditPostModal from '../components/post/EditPostModal';
+import ConfirmModal from '../components/common/ConfirmModal';
+import { PostSkeleton, CommentListSkeleton } from '../components/common/LoadingSkeleton';
 import { postsAPI, commentsAPI } from '../services/api';
-import { getCommunityByName } from '../data/communities';
 import '../styles/PostDetailPage.css';
 
 const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) => {
@@ -20,11 +26,32 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+  const optionsRef = useRef(null);
+  const { showToast } = useToast();
+  const { startLoading, stopLoading } = useLoading();
+  
+  const isOwner = currentUser && post && currentUser.username === post.author;
+
+  // Close options menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (optionsRef.current && !optionsRef.current.contains(event.target)) {
+        setIsOptionsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        startLoading();
         const [postData, commentsData] = await Promise.all([
           postsAPI.getById(postId),
           commentsAPI.getByPostId(postId)
@@ -35,6 +62,7 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
         console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
+        stopLoading();
       }
     };
 
@@ -42,12 +70,37 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
   }, [postId]);
 
   const handleSavePost = async () => {
+    if (!currentUser) {
+      onAuthAction();
+      return;
+    }
     try {
       const result = await postsAPI.save(postId);
       setSaved(result.saved);
+      showToast(result.saved ? 'Post saved!' : 'Post unsaved', 'success');
     } catch (error) {
       console.error('Error saving post:', error);
+      showToast('Failed to save post', 'error');
     }
+  };
+
+  const handleDeletePost = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDeletePost = async () => {
+    try {
+      await postsAPI.delete(postId);
+      showToast('Post deleted successfully', 'success');
+      navigate('/');
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      showToast(`Failed to delete: ${error.message}`, 'error');
+    }
+  };
+
+  const handlePostUpdated = (updatedPost) => {
+    setPost(prev => ({ ...prev, ...updatedPost }));
   };
 
   const handleCommentSubmit = async (e) => {
@@ -63,7 +116,7 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
     try {
       setSubmitting(true);
       const commentData = {
-        postId: parseInt(postId),
+        postId: postId,
         content: commentText.trim()
       };
       // Only add parentId if it exists
@@ -89,8 +142,22 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
 
   if (loading) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center' }}>
-        <h2>Loading...</h2>
+      <div style={{ display: 'flex', backgroundColor: 'var(--color-bg-page)', minHeight: '100vh' }}>
+        <div style={{ display: 'flex', width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
+          <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
+          <div style={{ display: 'flex', flex: 1, padding: '20px 24px', gap: '24px' }}>
+            <main style={{ flex: 1, maxWidth: '740px' }}>
+              <div className="skeleton" style={{ width: '60px', height: '32px', marginBottom: '16px', borderRadius: '4px' }} />
+              <PostSkeleton />
+              <div style={{ marginTop: '16px' }}>
+                <CommentListSkeleton count={4} />
+              </div>
+            </main>
+            <div className="desktop-only" style={{ width: '312px' }}>
+              <RightSidebar />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -106,8 +173,6 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
     );
   }
 
-  const communityData = getCommunityByName(post.subreddit);
-
   return (
     <div style={{ display: 'flex', backgroundColor: 'var(--color-bg-page)', minHeight: '100vh' }}>
       <div style={{ display: 'flex', width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
@@ -121,7 +186,7 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
               onClick={() => navigate(-1)} 
               className="back-button"
             >
-              ← Back
+              <ArrowLeft size={16} /> Back
             </button>
 
             {/* Post Detail Card */}
@@ -130,8 +195,13 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
               {/* Vote Section */}
               <div className="post-vote-section">
                 <VoteButtons 
-                  initialCount={post.voteCount || post.votes} 
+                  postId={post._id || post.id}
+                  initialCount={post.voteCount ?? (post.upvotes - (post.downvotes || 0)) ?? 0}
+                  initialVote={post.userVote}
                   onVote={onAuthAction}
+                  onVoteUpdate={(newCount, newVote) => {
+                    setPost(prev => ({ ...prev, voteCount: newCount, userVote: newVote }));
+                  }}
                 />
               </div>
 
@@ -172,20 +242,73 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
                 {/* Actions */}
                 <div className="post-detail-actions">
                   <button className="action-button">
-                    <span>💬</span> {post.commentCount || 0} Comments
+                    <MessageSquare size={18} />
+                    <span>{post.commentCount || 0} Comments</span>
                   </button>
-                  <button className="action-button" onClick={currentUser ? handleSavePost : onAuthAction}>
-                    <span>🔖</span> {saved ? 'Unsave' : 'Save'}
+                  <button className="action-button" onClick={handleSavePost}>
+                    <Bookmark size={18} fill={saved ? 'currentColor' : 'none'} />
+                    <span>{saved ? 'Saved' : 'Save'}</span>
                   </button>
-                  <button className="action-button">
-                    <span>↪</span> Share
+                  <button className="action-button" onClick={() => setIsShareModalOpen(true)}>
+                    <Share2 size={18} />
+                    <span>Share</span>
                   </button>
-                  <button className="action-button">
-                    <span>•••</span>
-                  </button>
+                  <div className="post-options-wrapper" ref={optionsRef}>
+                    <button className="action-button" onClick={() => setIsOptionsOpen(!isOptionsOpen)}>
+                      <MoreHorizontal size={18} />
+                    </button>
+                    {isOptionsOpen && (
+                      <div className="post-detail-options-menu">
+                        {isOwner ? (
+                          <>
+                            <button className="options-item" onClick={() => { setIsOptionsOpen(false); setIsEditModalOpen(true); }}>
+                              <Edit size={16} />
+                              <span>Edit Post</span>
+                            </button>
+                            <button className="options-item options-item-danger" onClick={() => { setIsOptionsOpen(false); handleDeletePost(); }}>
+                              <Trash2 size={16} />
+                              <span>Delete Post</span>
+                            </button>
+                          </>
+                        ) : (
+                          <div className="options-item options-item-disabled">
+                            <span>No actions available</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
+                {post.editedAt && <span className="post-edited-badge">(edited)</span>}
               </div>
             </article>
+
+            {/* Share Modal */}
+            <ShareModal
+              isOpen={isShareModalOpen}
+              onClose={() => setIsShareModalOpen(false)}
+              postId={post.id}
+              postTitle={post.title}
+            />
+
+            {/* Edit Post Modal */}
+            <EditPostModal
+              isOpen={isEditModalOpen}
+              onClose={() => setIsEditModalOpen(false)}
+              post={post}
+              onPostUpdated={handlePostUpdated}
+            />
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmModal
+              isOpen={isDeleteModalOpen}
+              onClose={() => setIsDeleteModalOpen(false)}
+              onConfirm={confirmDeletePost}
+              title="Delete Post"
+              message="Are you sure you want to delete this post? This action cannot be undone."
+              confirmText="Delete"
+              type="danger"
+            />
 
             {/* Comment Input */}
             <div className="comment-input-card">
@@ -251,7 +374,7 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
 
           {/* Right Sidebar */}
           <div className="desktop-only" style={{ width: '312px' }}>
-            <RightSidebar communityData={communityData} />
+            <RightSidebar />
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 .sidebar-container {
-  width: 224px; 
-  min-width: 224px;
-  max-height: calc(100vh - 56px);
+  width: 270px; 
+  min-width: 270px;
+  height: calc(100vh - 56px);
   background-color: var(--color-bg-card);
   border-right: 1px solid var(--color-border);
   position: sticky; 
@@ -16,12 +16,13 @@
 .sidebar-container.collapsed {
   width: 56px;
   min-width: 56px;
+  height: calc(100vh - 56px);
 }
 
 .sidebar-toggle-btn {
   position: absolute;
   top: 8px;
-  right: -12px;
+  right: 8px;
   width: 24px;
   height: 24px;
   border-radius: 50%;
@@ -35,6 +36,13 @@
   transition: all var(--transition-fast);
   color: var(--color-text-secondary);
   box-shadow: var(--shadow-sm);
+}
+
+.sidebar-container.collapsed .sidebar-toggle-btn {
+  position: relative;
+  top: auto;
+  right: auto;
+  margin: 8px auto 16px;
 }
 
 .sidebar-toggle-btn:hover {
@@ -60,10 +68,18 @@
   margin-bottom: 16px;
 }
 
+.sidebar-container.collapsed .sidebar-section {
+  padding: 0 8px;
+}
+
 .sidebar-divider {
   border: none;
   border-top: 1px solid var(--color-border);
   margin: 16px 12px;
+}
+
+.sidebar-container.collapsed .sidebar-divider {
+  margin: 12px 8px;
 }
 
 .sidebar-title {
@@ -155,6 +171,10 @@
   text-align: center;
 }
 
+.sidebar-container.collapsed .sidebar-icon {
+  margin-right: 0;
+}
+
 /* Circular icons for subreddits */
 .sidebar-icon-circle {
   margin-right: 12px;
@@ -221,4 +241,47 @@
 
 .sidebar-container.collapsed .sidebar-text {
   display: none;
+}
+
+
+/* Sidebar button style (for clickable items that aren't links) */
+.sidebar-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+/* Badge for community count */
+.sidebar-badge {
+  margin-left: auto;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+/* Communities expand button */
+.communities-expand-btn {
+  justify-content: flex-start;
+}
+
+.communities-expand-btn .expand-icon {
+  margin-left: auto;
+  color: var(--color-text-secondary);
+}
+
+/* Footer links */
+.sidebar-footer a {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.sidebar-footer a:hover {
+  color: var(--color-text-primary);
+  text-decoration: underline;
 }

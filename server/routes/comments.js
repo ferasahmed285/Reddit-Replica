@@ -1,20 +1,107 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
-const { authenticateToken } = require('../middleware/auth');
-const { 
-  getCommentsByPostId,
-  getCommentsByUser,
-  createComment,
-  voteComment,
-} = require('../data/comments');
-const { incrementCommentCount } = require('../data/posts');
+const { authenticateToken, optionalAuth } = require('../middleware/auth');
+const Comment = require('../models/Comment');
+const Post = require('../models/Post');
+const Vote = require('../models/Vote');
 
 const router = express.Router();
 
-// GET /api/comments/user/:username - Get comments by user (MUST be before /:id routes)
-router.get('/user/:username', (req, res) => {
+// Helper to add user vote info to comments
+const addUserVoteInfo = async (comments, userId) => {
+  if (!userId) return comments;
+  
+  const commentIds = [];
+  const collectIds = (cmts) => {
+    cmts.forEach(c => {
+      commentIds.push(c._id || c.id);
+      if (c.replies && c.replies.length > 0) {
+        collectIds(c.replies);
+      }
+    });
+  };
+  collectIds(comments);
+
+  const votes = await Vote.find({
+    user: userId,
+    target: { $in: commentIds },
+    targetType: 'comment'
+  });
+
+  const voteMap = {};
+  votes.forEach(v => {
+    voteMap[v.target.toString()] = v.voteType === 1 ? 'up' : 'down';
+  });
+
+  const addVotes = (cmts) => {
+    cmts.forEach(c => {
+      const id = (c._id || c.id).toString();
+      c.userVote = voteMap[id] || null;
+      if (c.replies && c.replies.length > 0) {
+        addVotes(c.replies);
+      }
+    });
+  };
+  addVotes(comments);
+
+  return comments;
+};
+
+// Helper to build comment tree
+const buildCommentTree = (comments) => {
+  const commentMap = {};
+  const roots = [];
+
+  // Create map
+  comments.forEach(comment => {
+    commentMap[comment._id.toString()] = { ...comment.toJSON(), replies: [] };
+  });
+
+  // Build tree
+  comments.forEach(comment => {
+    const commentObj = commentMap[comment._id.toString()];
+    if (comment.parentComment) {
+      const parent = commentMap[comment.parentComment.toString()];
+      if (parent) {
+        parent.replies.push(commentObj);
+      }
+    } else {
+      roots.push(commentObj);
+    }
+  });
+
+  return roots;
+};
+
+// GET /api/comments - Get comments by post ID
+router.get('/', optionalAuth, async (req, res) => {
   try {
-    const comments = getCommentsByUser(req.params.username);
+    const { postId } = req.query;
+    
+    if (!postId) {
+      return res.status(400).json({ message: 'postId is required' });
+    }
+
+    const comments = await Comment.find({ post: postId })
+      .sort({ createdAt: 1 });
+
+    const tree = buildCommentTree(comments);
+    const treeWithVotes = await addUserVoteInfo(tree, req.user?.id);
+
+    res.status(200).json(treeWithVotes);
+  } catch (error) {
+    console.error('Get comments error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET /api/comments/user/:username - Get comments by user
+router.get('/user/:username', async (req, res) => {
+  try {
+    const comments = await Comment.find({ authorUsername: req.params.username })
+      .sort({ createdAt: -1 })
+      .limit(50);
+
     res.status(200).json(comments);
   } catch (error) {
     console.error('Get user comments error:', error);
@@ -22,33 +109,15 @@ router.get('/user/:username', (req, res) => {
   }
 });
 
-// GET /api/comments?postId=:id - Get comments for a post
-router.get('/', (req, res) => {
-  try {
-    const { postId } = req.query;
-    
-    if (!postId) {
-      return res.status(400).json({ message: 'postId is required' });
-    }
-    
-    const comments = getCommentsByPostId(postId);
-    res.status(200).json(comments);
-  } catch (error) {
-    console.error('Get comments error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// POST /api/comments - Create new comment (protected)
+// POST /api/comments - Create comment (protected)
 router.post(
   '/',
   authenticateToken,
   [
-    body('postId').isInt().withMessage('Valid postId is required'),
-    body('content').trim().isLength({ min: 1, max: 10000 }).withMessage('Comment must be 1-10000 characters'),
-    body('parentId').optional({ nullable: true }).isInt().withMessage('parentId must be an integer'),
+    body('postId').notEmpty().withMessage('Post ID is required'),
+    body('content').trim().isLength({ min: 1, max: 10000 }).withMessage('Comment content is required'),
   ],
-  (req, res) => {
+  async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -60,16 +129,33 @@ router.post(
 
       const { postId, content, parentId } = req.body;
 
-      const newComment = createComment({
-        postId: parseInt(postId),
+      // Verify post exists
+      const post = await Post.findById(postId);
+      if (!post) {
+        return res.status(404).json({ message: 'Post not found' });
+      }
+
+      // Calculate depth if replying
+      let depth = 0;
+      if (parentId) {
+        const parentComment = await Comment.findById(parentId);
+        if (parentComment) {
+          depth = parentComment.depth + 1;
+        }
+      }
+
+      const newComment = await Comment.create({
         content,
-        author: req.user.username,
-        authorId: req.user.id,
-        parentId: parentId ? parseInt(parentId) : null,
+        post: postId,
+        author: req.user.id,
+        authorUsername: req.user.username,
+        parentComment: parentId || null,
+        depth
       });
 
       // Increment post comment count
-      incrementCommentCount(postId);
+      post.commentCount++;
+      await post.save();
 
       res.status(201).json(newComment);
     } catch (error) {
@@ -79,35 +165,140 @@ router.post(
   }
 );
 
-// POST /api/comments/:id/vote - Vote on comment (protected)
-router.post(
-  '/:id/vote',
-  authenticateToken,
-  [
-    body('vote').isIn(['up', 'down', 'none']).withMessage('Invalid vote type'),
-  ],
-  (req, res) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ 
-          message: errors.array()[0].msg 
-        });
-      }
-
-      const { vote } = req.body;
-      const updatedComment = voteComment(req.params.id, req.user.id, vote);
-
-      if (!updatedComment) {
-        return res.status(404).json({ message: 'Comment not found' });
-      }
-
-      res.status(200).json(updatedComment);
-    } catch (error) {
-      console.error('Vote comment error:', error);
-      res.status(500).json({ message: 'Server error' });
+// PUT /api/comments/:id - Update comment (protected)
+router.put('/:id', authenticateToken, async (req, res) => {
+  try {
+    const comment = await Comment.findById(req.params.id);
+    
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
     }
+
+    if (comment.author.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to edit this comment' });
+    }
+
+    const { content } = req.body;
+    
+    if (!content || !content.trim()) {
+      return res.status(400).json({ message: 'Content is required' });
+    }
+
+    comment.content = content.trim();
+    comment.isEdited = true;
+    comment.editedAt = new Date();
+
+    await comment.save();
+
+    res.status(200).json(comment);
+  } catch (error) {
+    console.error('Update comment error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
-);
+});
+
+// DELETE /api/comments/:id - Delete comment (protected)
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const comment = await Comment.findById(req.params.id);
+    
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    if (comment.author.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to delete this comment' });
+    }
+
+    // Delete comment and all replies
+    const deleteCommentAndReplies = async (commentId) => {
+      const replies = await Comment.find({ parentComment: commentId });
+      for (const reply of replies) {
+        await deleteCommentAndReplies(reply._id);
+      }
+      await Comment.findByIdAndDelete(commentId);
+      await Vote.deleteMany({ target: commentId, targetType: 'comment' });
+    };
+
+    await deleteCommentAndReplies(req.params.id);
+
+    // Decrement post comment count
+    const post = await Post.findById(comment.post);
+    if (post) {
+      post.commentCount = Math.max(0, post.commentCount - 1);
+      await post.save();
+    }
+
+    res.status(200).json({ message: 'Comment deleted successfully' });
+  } catch (error) {
+    console.error('Delete comment error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// POST /api/comments/:id/vote - Vote on comment (protected)
+router.post('/:id/vote', authenticateToken, async (req, res) => {
+  try {
+    const { vote } = req.body;
+    const commentId = req.params.id;
+
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    const voteValue = vote === 'up' ? 1 : -1;
+    let userVote = null;
+
+    const existingVote = await Vote.findOne({
+      user: req.user.id,
+      target: commentId,
+      targetType: 'comment'
+    });
+
+    if (existingVote) {
+      if (existingVote.voteType === voteValue) {
+        // Remove vote
+        await Vote.findByIdAndDelete(existingVote._id);
+        if (voteValue === 1) comment.upvotes--;
+        else comment.downvotes--;
+        userVote = null;
+      } else {
+        // Change vote
+        if (existingVote.voteType === 1) {
+          comment.upvotes--;
+          comment.downvotes++;
+        } else {
+          comment.downvotes--;
+          comment.upvotes++;
+        }
+        existingVote.voteType = voteValue;
+        await existingVote.save();
+        userVote = vote;
+      }
+    } else {
+      // New vote
+      await Vote.create({
+        user: req.user.id,
+        target: commentId,
+        targetType: 'comment',
+        voteType: voteValue
+      });
+      if (voteValue === 1) comment.upvotes++;
+      else comment.downvotes++;
+      userVote = vote;
+    }
+
+    await comment.save();
+
+    res.status(200).json({
+      voteCount: comment.upvotes - comment.downvotes,
+      userVote
+    });
+  } catch (error) {
+    console.error('Vote error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 module.exports = router;

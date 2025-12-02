@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Flame, Sparkles, TrendingUp } from 'lucide-react';
 import Sidebar from '../components/layout/Sidebar';
 import RightSidebar from '../components/layout/RightSidebar';
 import PostList from '../components/post/PostList';
@@ -26,19 +27,19 @@ const HomePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) => {
                       className={`btn-sort ${sortBy === 'hot' ? 'active' : ''}`} 
                       onClick={() => setSortBy('hot')}
                     >
-                      🔥 Hot
+                      <Flame size={18} /> Hot
                     </button>
                     <button 
                       className={`btn-sort ${sortBy === 'new' ? 'active' : ''}`} 
                       onClick={() => setSortBy('new')}
                     >
-                      ✨ New
+                      <Sparkles size={18} /> New
                     </button>
                     <button 
                       className={`btn-sort ${sortBy === 'top' ? 'active' : ''}`} 
                       onClick={() => setSortBy('top')}
                     >
-                      ⬆ Top
+                      <TrendingUp size={18} /> Top
                     </button>
                   </div>
 

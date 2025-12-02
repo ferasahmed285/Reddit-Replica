@@ -1,47 +1,46 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bell, Check, MessageSquare, ArrowBigUp, UserPlus } from 'lucide-react';
+import { Bell, Check, MessageSquare, ArrowBigUp, UserPlus, Reply } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { notificationsAPI } from '../../services/api';
 import '../../styles/NotificationsDropdown.css';
 
 const NotificationsDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: 'upvote',
-      message: 'Your post "React 19 is coming" received 100 upvotes',
-      time: '2 hours ago',
-      read: false,
-      link: '/post/4'
-    },
-    {
-      id: 2,
-      type: 'comment',
-      message: 'SeniorDev replied to your comment',
-      time: '4 hours ago',
-      read: false,
-      link: '/post/5'
-    },
-    {
-      id: 3,
-      type: 'follow',
-      message: 'CodeNinja started following you',
-      time: '1 day ago',
-      read: true,
-      link: '/user/CodeNinja'
-    },
-    {
-      id: 4,
-      type: 'upvote',
-      message: 'Your comment received 50 upvotes',
-      time: '2 days ago',
-      read: true,
-      link: '/post/1'
-    },
-  ]);
-
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(false);
   const dropdownRef = useRef(null);
+  const { currentUser } = useAuth();
+
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  // Fetch notifications when dropdown opens
+  useEffect(() => {
+    if (isOpen && currentUser) {
+      fetchNotifications();
+    }
+  }, [isOpen, currentUser]);
+
+  // Fetch notifications on mount for badge count
+  useEffect(() => {
+    if (currentUser) {
+      fetchNotifications();
+    }
+  }, [currentUser]);
+
+  const fetchNotifications = async () => {
+    if (!currentUser) return;
+    try {
+      setLoading(true);
+      const data = await notificationsAPI.getAll();
+      setNotifications(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      setNotifications([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -54,14 +53,24 @@ const NotificationsDropdown = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const markAsRead = (id) => {
-    setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
+  const markAsRead = async (id) => {
+    try {
+      await notificationsAPI.markAsRead(id);
+      setNotifications(prev =>
+        prev.map(n => n.id === id || n._id === id ? { ...n, read: true } : n)
+      );
+    } catch (error) {
+      console.error('Error marking as read:', error);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const markAllAsRead = async () => {
+    try {
+      await notificationsAPI.markAllAsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    }
   };
 
   const getIcon = (type) => {
@@ -70,6 +79,8 @@ const NotificationsDropdown = () => {
         return <ArrowBigUp size={20} className="notif-icon upvote" />;
       case 'comment':
         return <MessageSquare size={20} className="notif-icon comment" />;
+      case 'reply':
+        return <Reply size={20} className="notif-icon reply" />;
       case 'follow':
         return <UserPlus size={20} className="notif-icon follow" />;
       default:
@@ -86,7 +97,7 @@ const NotificationsDropdown = () => {
       >
         <Bell size={20} />
         {unreadCount > 0 && (
-          <span className="notif-badge">{unreadCount}</span>
+          <span className="notif-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
         )}
       </button>
 
@@ -103,7 +114,12 @@ const NotificationsDropdown = () => {
           </div>
 
           <div className="notif-list">
-            {notifications.length === 0 ? (
+            {loading ? (
+              <div className="notif-loading">
+                <div className="notif-spinner"></div>
+                <span>Loading...</span>
+              </div>
+            ) : notifications.length === 0 ? (
               <div className="no-notifications">
                 <Bell size={48} />
                 <p>No notifications yet</p>
@@ -111,18 +127,18 @@ const NotificationsDropdown = () => {
             ) : (
               notifications.map(notif => (
                 <Link
-                  key={notif.id}
+                  key={notif.id || notif._id}
                   to={notif.link}
                   className={`notif-item ${notif.read ? 'read' : 'unread'}`}
                   onClick={() => {
-                    markAsRead(notif.id);
+                    markAsRead(notif.id || notif._id);
                     setIsOpen(false);
                   }}
                 >
                   {getIcon(notif.type)}
                   <div className="notif-content">
                     <p className="notif-message">{notif.message}</p>
-                    <span className="notif-time">{notif.time}</span>
+                    <span className="notif-time">{notif.time || notif.timeAgo}</span>
                   </div>
                   {!notif.read && <div className="unread-dot" />}
                 </Link>

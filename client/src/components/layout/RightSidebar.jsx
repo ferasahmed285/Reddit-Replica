@@ -1,23 +1,39 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { communitiesAPI } from '../../services/api';
 import '../../styles/RightSidebar.css';
-import { communities } from '../../data/communities';
 
 const RightSidebar = ({ communityData, onCreatePost }) => {
   const [showAll, setShowAll] = useState(false);
+  const [communities, setCommunities] = useState([]);
   const { currentUser } = useAuth();
+
+  useEffect(() => {
+    const fetchCommunities = async () => {
+      try {
+        const data = await communitiesAPI.getAll();
+        setCommunities(data);
+      } catch (error) {
+        console.error('Error fetching communities:', error);
+      }
+    };
+    if (!communityData) {
+      fetchCommunities();
+    }
+  }, [communityData]);
   
-  // Sort communities by member count (convert string to number for sorting)
+  // Sort communities by member count
   const parseMembers = (memberStr) => {
+    if (!memberStr) return 0;
     const num = parseFloat(memberStr);
-    if (memberStr.includes('M')) return num * 1000000;
-    if (memberStr.includes('k')) return num * 1000;
+    if (String(memberStr).includes('M')) return num * 1000000;
+    if (String(memberStr).includes('k')) return num * 1000;
     return num;
   };
 
   const sortedCommunities = [...communities].sort((a, b) => 
-    parseMembers(b.members) - parseMembers(a.members)
+    parseMembers(b.members || b.memberCount) - parseMembers(a.members || a.memberCount)
   );
 
   const displayedCommunities = showAll ? sortedCommunities : sortedCommunities.slice(0, 5);
@@ -59,6 +75,25 @@ const RightSidebar = ({ communityData, onCreatePost }) => {
 
             <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '16px 0' }} />
 
+            {communityData.creatorUsername && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '12px', color: '#7c7c7c', marginBottom: '4px' }}>Created by</div>
+                <Link 
+                  to={`/user/${communityData.creatorUsername}`} 
+                  style={{ 
+                    color: 'var(--color-blue)', 
+                    textDecoration: 'none', 
+                    fontWeight: '500',
+                    fontSize: '14px'
+                  }}
+                >
+                  u/{communityData.creatorUsername}
+                </Link>
+              </div>
+            )}
+
+            <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '16px 0' }} />
+
             {/* Hide Create Post button - use header Plus button instead */}
           </div>
         </div>
@@ -79,14 +114,14 @@ const RightSidebar = ({ communityData, onCreatePost }) => {
         </div>
         <ul className="community-list">
           {displayedCommunities.map((community, index) => (
-            <li key={community.id} className="community-item">
+            <li key={community._id || community.id || community.name} className="community-item">
               <div className="community-rank">{index + 1}</div>
               <img src={community.iconUrl} alt="" className="community-icon" />
               <div className="community-info">
-                <Link to={`/r/${community.id}`} className="community-name">
-                  {community.name}
+                <Link to={`/r/${community.name}`} className="community-name">
+                  r/{community.name}
                 </Link>
-                <span className="community-members">{community.members} members</span>
+                <span className="community-members">{community.members || community.memberCount} members</span>
               </div>
             </li>
           ))}

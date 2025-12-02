@@ -3,26 +3,31 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/layout/Sidebar';
 import Post from '../components/post/Post';
-import { postsAPI } from '../services/api';
-import { communities } from '../data/communities';
+import { PostListSkeleton } from '../components/common/LoadingSkeleton';
+import { postsAPI, communitiesAPI } from '../services/api';
 import { Bookmark } from 'lucide-react';
 import '../styles/SavedPostsPage.css';
 
 const SavedPostsPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) => {
   const [savedPosts, setSavedPosts] = useState([]);
+  const [communities, setCommunities] = useState([]);
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAuth();
 
   useEffect(() => {
-    const fetchSavedPosts = async () => {
+    const fetchData = async () => {
       if (!currentUser) {
         setLoading(false);
         return;
       }
 
       try {
-        const posts = await postsAPI.getSaved();
+        const [posts, communitiesData] = await Promise.all([
+          postsAPI.getSaved(),
+          communitiesAPI.getAll()
+        ]);
         setSavedPosts(posts);
+        setCommunities(communitiesData);
       } catch (error) {
         console.error('Error fetching saved posts:', error);
       } finally {
@@ -30,7 +35,7 @@ const SavedPostsPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
       }
     };
 
-    fetchSavedPosts();
+    fetchData();
   }, [currentUser]);
 
   if (!currentUser) {
@@ -52,8 +57,14 @@ const SavedPostsPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
       <div style={{ display: 'flex', backgroundColor: 'var(--color-bg-page)', minHeight: '100vh' }}>
         <div style={{ display: 'flex', width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
           <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
-          <div style={{ flex: 1, padding: '20px 24px', textAlign: 'center' }}>
-            <h2>Loading...</h2>
+          <div style={{ flex: 1, padding: '20px 24px' }}>
+            <div className="saved-header">
+              <div className="saved-title-section">
+                <Bookmark size={28} />
+                <h1>Saved Posts</h1>
+              </div>
+            </div>
+            <PostListSkeleton count={4} />
           </div>
         </div>
       </div>

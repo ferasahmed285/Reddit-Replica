@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { communitiesAPI } from '../../services/api';
+import EditCommunityModal from './EditCommunityModal';
+import ConfirmModal from '../common/ConfirmModal';
 import '../../styles/CommunityHeader.css';
 
 const CommunityHeader = ({ 
@@ -9,14 +12,44 @@ const CommunityHeader = ({
   iconUrl, 
   name, 
   title, 
-  members, 
-  online,
   onAuthRequired,
-  communityId
+  communityId,
+  communityData,
+  onCommunityUpdated
 }) => {
   const { currentUser } = useAuth();
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [joined, setJoined] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Check if user is owner - compare by string ID
+  const isOwner = currentUser && communityData && 
+    (currentUser.id === communityData.creator || 
+     currentUser.id === communityData.creatorId ||
+     currentUser._id === communityData.creator);
+
+  // Check if user has joined this community
+  useEffect(() => {
+    const checkJoinStatus = async () => {
+      if (!currentUser) {
+        setJoined(false);
+        return;
+      }
+      try {
+        const joinedCommunities = await communitiesAPI.getJoined();
+        const isJoined = joinedCommunities.some(c => 
+          c.name === communityId || c.name === name
+        );
+        setJoined(isJoined);
+      } catch (error) {
+        console.error('Error checking join status:', error);
+      }
+    };
+    checkJoinStatus();
+  }, [currentUser, communityId, name]);
 
   const handleJoinClick = async () => {
     if (!currentUser && onAuthRequired) {
@@ -25,19 +58,44 @@ const CommunityHeader = ({
     }
 
     try {
+      setLoading(true);
       const result = await communitiesAPI.join(communityId);
       setJoined(result.joined);
       showToast(
-        result.joined ? `Joined ${name}! 🎉` : `Left ${name}`,
+        result.joined ? `Joined r/${name}! 🎉` : `Left r/${name}`,
         'success'
       );
-      // Refresh page after short delay to update sidebar
-      setTimeout(() => window.location.reload(), 1000);
+      // Update community data if callback provided
+      if (onCommunityUpdated && result.community) {
+        onCommunityUpdated(result.community);
+      }
     } catch (error) {
       console.error('Join error:', error);
       showToast(`Failed to join: ${error.message}`, 'error');
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleEditClick = () => {
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteClick = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await communitiesAPI.delete(communityId);
+      showToast('Community deleted successfully', 'success');
+      navigate('/');
+    } catch (error) {
+      console.error('Error deleting community:', error);
+      showToast(`Failed to delete: ${error.message}`, 'error');
+    }
+  };
+
   return (
     <div className="community-header-container">
       {/* 1. Top Banner */}
@@ -68,10 +126,24 @@ const CommunityHeader = ({
             </h1>
             
             <div className="community-actions">
-              <button className="btn-join" onClick={handleJoinClick}>
-                {joined ? 'Joined' : 'Join'}
-              </button>
-              {currentUser && <button className="btn-bell" aria-label="Notifications">🔔</button>}
+              {isOwner ? (
+                <div className="owner-actions">
+                  <button className="btn-edit" onClick={handleEditClick}>
+                    Edit Community
+                  </button>
+                  <button className="btn-delete" onClick={handleDeleteClick}>
+                    Delete Community
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  className={`btn-join ${joined ? 'joined' : ''}`} 
+                  onClick={handleJoinClick}
+                  disabled={loading}
+                >
+                  {loading ? '...' : (joined ? 'Joined' : 'Join')}
+                </button>
+              )}
             </div>
           </div>
 
@@ -89,6 +161,25 @@ const CommunityHeader = ({
             </div>
         </div>
       </div>
+
+      {/* Edit Community Modal */}
+      <EditCommunityModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        community={communityData}
+        onCommunityUpdated={onCommunityUpdated}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Community"
+        message={`Are you sure you want to delete r/${name}? This will permanently delete all posts, comments, and data. This action cannot be undone.`}
+        confirmText="Delete Community"
+        type="danger"
+      />
     </div>
   );
 };

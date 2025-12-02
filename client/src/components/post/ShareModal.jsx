@@ -28,11 +28,11 @@ const ShareModal = ({ isOpen, onClose, postId, postTitle }) => {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="share-modal-overlay" onClick={onClose}>
       <div className="share-modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="share-modal-header">
           <h3>Share post</h3>
-          <button className="modal-close-btn" onClick={onClose}>
+          <button className="share-modal-close" onClick={onClose}>
             <X size={20} />
           </button>
         </div>

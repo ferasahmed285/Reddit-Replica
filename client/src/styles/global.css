@@ -14,6 +14,8 @@
   --color-blue-hover: #0060a8;
   --color-upvote: #ff4500;
   --color-downvote: #7193ff;
+  --color-green: #46d160;
+  --color-orange: #ff4500;
   
   /* Backgrounds */
   --color-bg-page: #dae0e6;
@@ -207,6 +209,47 @@ button:disabled {
 
 .dark-mode .media-container {
   background-color: #000;
+}
+
+/* Dark mode: Login/Signup modal input text */
+.dark-mode .input-group input {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-secondary);
+}
+
+.dark-mode .input-group input::placeholder {
+  color: var(--color-text-secondary);
+}
+
+/* Dark mode: Comment textarea */
+.dark-mode .comment-textarea {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.dark-mode .comment-textarea::placeholder {
+  color: var(--color-text-secondary);
+}
+
+/* Dark mode: Popular communities widget header */
+.dark-mode .widget-header {
+  background-color: var(--color-bg-secondary);
+}
+
+.dark-mode .widget-header h3 {
+  color: var(--color-text-secondary);
+}
+
+/* Dark mode: Reply form textarea */
+.dark-mode .reply-form textarea {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.dark-mode .reply-form textarea::placeholder {
+  color: var(--color-text-secondary);
 }
 
 /* Smooth transitions for all elements when switching themes */

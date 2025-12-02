@@ -21,7 +21,7 @@
 
 .widget-header {
   padding: 12px;
-  background-color: #f7f9fa; /* Slightly darker header for widget */
+  background-color: var(--color-bg-secondary);
 }
 
 .widget-header h3 {
