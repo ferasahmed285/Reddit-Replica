@@ -13,12 +13,11 @@
 
 .custom-feed-modal {
   background: var(--color-bg-card);
-  border-radius: var(--radius-xl);
+  border-radius: 16px;
   width: 100%;
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-lg);
 }
 
 .custom-feed-modal-header {
@@ -33,6 +32,7 @@
   font-size: 18px;
   font-weight: 600;
   color: var(--color-text-primary);
+  margin: 0;
 }
 
 .custom-feed-modal-close {
@@ -45,7 +45,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--transition-fast);
 }
 
 .custom-feed-modal-close:hover {
@@ -58,7 +57,7 @@
 }
 
 .custom-feed-form .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 24px;
   position: relative;
 }
 
@@ -68,10 +67,11 @@
   padding: 14px 16px;
   background: var(--color-bg-secondary);
   border: 1px solid transparent;
-  border-radius: var(--radius-lg);
+  border-radius: 12px;
   color: var(--color-text-primary);
   font-size: 14px;
-  transition: all var(--transition-fast);
+  font-family: inherit;
+  box-sizing: border-box;
 }
 
 .custom-feed-input:focus,
@@ -93,7 +93,7 @@
 .char-count {
   position: absolute;
   right: 12px;
-  bottom: -20px;
+  top: 14px;
   font-size: 12px;
   color: var(--color-text-secondary);
 }
@@ -136,7 +136,7 @@
   border: none;
   border-radius: 14px;
   cursor: pointer;
-  transition: background-color var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .toggle-btn.active {
@@ -151,67 +151,66 @@
   height: 22px;
   background: white;
   border-radius: 50%;
-  transition: transform var(--transition-fast);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
 }
 
 .toggle-btn.active .toggle-knob {
   transform: translateX(20px);
 }
 
+/* Action buttons container */
 .custom-feed-actions {
   display: flex;
-  justify-content: flex-end;
-  align-items: center;
   gap: 12px;
   margin-top: 24px;
 }
 
-/* Edit modal specific - with delete button */
 .custom-feed-actions.with-delete {
   justify-content: space-between;
 }
 
-.custom-feed-actions .btn-cancel {
-  padding: 10px 20px;
-  background: var(--color-bg-secondary);
-  border: 1px solid transparent;
-  border-radius: var(--radius-full);
-  color: var(--color-text-primary);
+.custom-feed-actions .actions-right {
+  display: flex;
+  gap: 12px;
+}
+
+/* Base button styles */
+.custom-feed-actions button {
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 20px;
   font-size: 14px;
   font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
-  transition: all var(--transition-fast);
-  line-height: 1.2;
-  height: 40px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+}
+
+/* Cancel button */
+.custom-feed-actions .btn-cancel {
+  background: var(--color-bg-secondary);
+  border: none;
+  color: var(--color-text-primary);
+  min-width: 90px;
 }
 
 .custom-feed-actions .btn-cancel:hover {
   background: var(--color-bg-hover);
 }
 
+/* Submit button */
 .custom-feed-actions .btn-submit {
-  padding: 10px 20px;
   background: var(--color-blue);
-  border: 1px solid transparent;
-  border-radius: var(--radius-full);
+  border: none;
   color: white;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  line-height: 1.2;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-width: 90px;
 }
 
 .custom-feed-actions .btn-submit:hover:not(:disabled) {
-  background: var(--color-blue-hover);
+  opacity: 0.9;
 }
 
 .custom-feed-actions .btn-submit:disabled {
@@ -219,31 +218,14 @@
   cursor: not-allowed;
 }
 
-
-/* Delete button for edit modal */
+/* Delete button */
 .custom-feed-actions .btn-delete {
-  padding: 10px 20px;
   background: transparent;
   border: 1px solid #ff4444;
-  border-radius: var(--radius-full);
   color: #ff4444;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  line-height: 1.2;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-width: 110px;
 }
 
 .custom-feed-actions .btn-delete:hover {
   background: rgba(255, 68, 68, 0.1);
-}
-
-.custom-feed-actions .actions-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
 }

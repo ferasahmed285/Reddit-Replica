@@ -13,6 +13,7 @@ import EditPostModal from '../components/post/EditPostModal';
 import ConfirmModal from '../components/common/ConfirmModal';
 import { PostSkeleton, CommentListSkeleton } from '../components/common/LoadingSkeleton';
 import { postsAPI, commentsAPI } from '../services/api';
+import usePageTitle from '../hooks/usePageTitle';
 import '../styles/PostDetailPage.css';
 
 const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) => {
@@ -35,6 +36,8 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
   const { startLoading, stopLoading } = useLoading();
   
   const isOwner = currentUser && post && currentUser.username === post.author;
+  
+  usePageTitle(post?.title);
 
   // Close options menu when clicking outside
   useEffect(() => {
@@ -142,19 +145,21 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', backgroundColor: 'var(--color-bg-page)', minHeight: '100vh' }}>
-        <div style={{ display: 'flex', width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
-          <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
-          <div style={{ display: 'flex', flex: 1, padding: '20px 24px', gap: '24px' }}>
-            <main style={{ flex: 1, maxWidth: '740px' }}>
-              <div className="skeleton" style={{ width: '60px', height: '32px', marginBottom: '16px', borderRadius: '4px' }} />
-              <PostSkeleton />
-              <div style={{ marginTop: '16px' }}>
-                <CommentListSkeleton count={4} />
+      <div className="page-layout">
+        <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
+        <div className="page-content-wrapper">
+          <div className="page-content">
+            <div className="page-main-area">
+              <main className="page-main-content">
+                <div className="skeleton" style={{ width: '60px', height: '32px', marginBottom: '16px', borderRadius: '4px' }} />
+                <PostSkeleton />
+                <div style={{ marginTop: '16px' }}>
+                  <CommentListSkeleton count={4} />
+                </div>
+              </main>
+              <div className="desktop-only page-right-sidebar">
+                <RightSidebar />
               </div>
-            </main>
-            <div className="desktop-only" style={{ width: '312px' }}>
-              <RightSidebar />
             </div>
           </div>
         </div>
@@ -174,14 +179,14 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
   }
 
   return (
-    <div style={{ display: 'flex', backgroundColor: 'var(--color-bg-page)', minHeight: '100vh' }}>
-      <div style={{ display: 'flex', width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
-        <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
-        
-        <div style={{ display: 'flex', flex: 1, padding: '20px 24px', gap: '24px' }}>
-          <main style={{ flex: 1, maxWidth: '740px' }}>
-            
-            {/* Back Button */}
+    <div className="page-layout">
+      <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
+      
+      <div className="page-content-wrapper">
+        <div className="page-content">
+          <div className="page-main-area">
+            <main className="page-main-content">
+              {/* Back Button */}
             <button 
               onClick={() => navigate(-1)} 
               className="back-button"
@@ -370,11 +375,12 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
                 }}
               />
             </div>
-          </main>
+            </main>
 
-          {/* Right Sidebar */}
-          <div className="desktop-only" style={{ width: '312px' }}>
-            <RightSidebar />
+            {/* Right Sidebar */}
+            <div className="desktop-only page-right-sidebar">
+              <RightSidebar />
+            </div>
           </div>
         </div>
       </div>

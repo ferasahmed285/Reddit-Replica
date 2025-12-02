@@ -11,6 +11,7 @@ import CreatePostModal from '../components/post/CreatePostModal';
 import JoinPromptModal from '../components/community/JoinPromptModal';
 import { PostListSkeleton } from '../components/common/LoadingSkeleton';
 import { communitiesAPI } from '../services/api';
+import usePageTitle from '../hooks/usePageTitle';
 import '../styles/CommunityPage.css';
 
 const CommunityPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) => {
@@ -24,6 +25,8 @@ const CommunityPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =>
   const [refreshKey, setRefreshKey] = useState(0);
   const { currentUser } = useAuth();
   const { showToast } = useToast();
+  
+  usePageTitle(communityData ? `r/${communityData.name}` : `r/${subreddit}`);
 
   useEffect(() => {
     const fetchCommunity = async () => {
@@ -87,21 +90,18 @@ const CommunityPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =>
 
   if (loading) {
     return (
-      <div className="community-page">
-        <div style={{ display: 'flex', backgroundColor: 'var(--color-bg-page)', minHeight: '100vh' }}>
-          <div style={{ display: 'flex', width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
-            <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
-            <div style={{ display: 'flex', flex: 1, flexDirection: 'column', width: '100%' }}>
-              {/* Banner skeleton */}
-              <div className="skeleton" style={{ height: '180px', width: '100%' }} />
-              <div style={{ display: 'flex', padding: '20px 24px', gap: '24px' }}>
-                <main style={{ flex: 1, maxWidth: '740px' }}>
-                  <div className="skeleton" style={{ height: '40px', marginBottom: '16px', borderRadius: '8px' }} />
-                  <PostListSkeleton count={4} />
-                </main>
-                <div className="desktop-only" style={{ width: '312px' }}>
-                  <RightSidebar />
-                </div>
+      <div className="community-page page-layout">
+        <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
+        <div className="page-content-wrapper">
+          <div style={{ display: 'flex', flex: 1, flexDirection: 'column', width: '100%', maxWidth: '1010px' }}>
+            <div className="skeleton" style={{ height: '180px', width: '100%' }} />
+            <div className="page-main-area">
+              <main className="page-main-content">
+                <div className="skeleton" style={{ height: '40px', marginBottom: '16px', borderRadius: '8px' }} />
+                <PostListSkeleton count={4} />
+              </main>
+              <div className="desktop-only page-right-sidebar">
+                <RightSidebar />
               </div>
             </div>
           </div>
@@ -113,28 +113,24 @@ const CommunityPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =>
   if (!communityData) return <div style={{ padding: '40px', textAlign: 'center' }}>Community not found</div>;
 
   return (
-    <div className="community-page">
+    <div className="community-page page-layout">
+      <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
       
-      <div style={{ display: 'flex', backgroundColor: 'var(--color-bg-page)', minHeight: '100vh' }}>
-        <div style={{ display: 'flex', width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
-            
-            <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
+      <div className="page-content-wrapper">
+        <div style={{ display: 'flex', flex: 1, flexDirection: 'column', width: '100%', maxWidth: '1010px' }}>
+          <CommunityHeader 
+            name={communityData.name}
+            title={communityData.title}
+            bannerUrl={communityData.bannerUrl}
+            iconUrl={communityData.iconUrl}
+            onAuthRequired={onAuthAction}
+            communityId={subreddit}
+            communityData={communityData}
+            onCommunityUpdated={() => window.location.reload()}
+          />
 
-            <div style={{ display: 'flex', flex: 1, flexDirection: 'column', width: '100%' }}>
-                
-                <CommunityHeader 
-                  name={communityData.name}
-                  title={communityData.title}
-                  bannerUrl={communityData.bannerUrl}
-                  iconUrl={communityData.iconUrl}
-                  onAuthRequired={onAuthAction}
-                  communityId={subreddit}
-                  communityData={communityData}
-                  onCommunityUpdated={() => window.location.reload()}
-                />
-
-                <div style={{ display: 'flex', padding: '20px 24px', gap: '24px' }}>
-                    <main style={{ flex: 1, maxWidth: '740px' }}>
+          <div className="page-main-area">
+            <main className="page-main-content">
                       
                       {/* 4. NEW: Sorting Controls & Create Post Trigger */}
                       <div className="feed-controls">
@@ -192,12 +188,10 @@ const CommunityPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =>
                       />
                     </main>
 
-                    <div className="desktop-only" style={{ width: '312px' }}>
-                        <RightSidebar communityData={communityData} />
-                    </div>
-                </div>
+            <div className="desktop-only page-right-sidebar">
+              <RightSidebar communityData={communityData} />
             </div>
-
+          </div>
         </div>
       </div>
     </div>

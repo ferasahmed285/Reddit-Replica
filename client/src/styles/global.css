@@ -123,6 +123,41 @@ button:disabled {
   }
 }
 
+/* Main page layout - sidebar sticks to left */
+.page-layout {
+  display: flex;
+  background-color: var(--color-bg-page);
+  min-height: 100vh;
+}
+
+.page-content-wrapper {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+}
+
+.page-content {
+  display: flex;
+  width: 100%;
+  max-width: 1010px;
+}
+
+.page-main-area {
+  display: flex;
+  flex: 1;
+  padding: 20px 24px;
+  gap: 24px;
+}
+
+.page-main-content {
+  flex: 1;
+  max-width: 740px;
+}
+
+.page-right-sidebar {
+  width: 312px;
+}
+
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 8px;

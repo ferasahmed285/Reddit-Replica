@@ -7,6 +7,7 @@ import { UserProfileSkeleton, PostListSkeleton } from '../components/common/Load
 import EditProfileModal from '../components/user/EditProfileModal';
 import { postsAPI, usersAPI, commentsAPI, customFeedsAPI } from '../services/api';
 import { MessageSquare, Cake, Award, Bookmark, Settings, LayoutGrid } from 'lucide-react';
+import usePageTitle from '../hooks/usePageTitle';
 import '../styles/UserProfilePage.css';
 
 const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) => {
@@ -26,6 +27,8 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
   const isOwnProfile = currentUser && currentUser.username === username;
+  
+  usePageTitle(`u/${username}`);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -126,10 +129,10 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', backgroundColor: 'var(--color-bg-page)', minHeight: '100vh' }}>
-        <div style={{ display: 'flex', width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
-          <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
-          <div style={{ flex: 1, padding: '20px 24px' }}>
+      <div className="page-layout">
+        <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
+        <div className="page-content-wrapper">
+          <div style={{ flex: 1, padding: '20px 24px', maxWidth: '1010px' }}>
             <UserProfileSkeleton />
             <div className="skeleton" style={{ height: '48px', marginBottom: '16px', borderRadius: '8px' }} />
             <PostListSkeleton count={3} />
@@ -149,12 +152,11 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
   }
 
   return (
-    <div style={{ display: 'flex', backgroundColor: 'var(--color-bg-page)', minHeight: '100vh' }}>
-      <div style={{ display: 'flex', width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
-        <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
-        
-        <div style={{ flex: 1, padding: '20px 24px' }}>
-          
+    <div className="page-layout">
+      <Sidebar isCollapsed={isSidebarCollapsed} onToggle={onToggleSidebar} />
+      
+      <div className="page-content-wrapper">
+        <div style={{ flex: 1, padding: '20px 24px', maxWidth: '1010px' }}>
           {/* Profile Header */}
           <div className="profile-header">
             <div className="profile-banner" style={{ background: user.bannerColor || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }} />
