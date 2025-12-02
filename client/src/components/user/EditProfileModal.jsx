@@ -94,8 +94,8 @@ const EditProfileModal = ({ isOpen, onClose, user, onProfileUpdated }) => {
   };
 
   return createPortal(
-    <div className="edit-profile-overlay" onClick={onClose}>
-      <div className="edit-profile-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="edit-profile-overlay">
+      <div className="edit-profile-modal">
         <div className="edit-profile-header">
           <div className="header-icon">
             <User size={24} />

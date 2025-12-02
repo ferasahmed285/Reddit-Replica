@@ -86,8 +86,8 @@ const CreateCommunityModal = ({ isOpen, onClose, onCommunityCreated }) => {
   };
 
   return createPortal(
-    <div className="create-community-overlay" onClick={onClose}>
-      <div className="create-community-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="create-community-overlay">
+      <div className="create-community-modal">
         <div className="create-community-header">
           <div className="header-icon">
             <Users size={24} />

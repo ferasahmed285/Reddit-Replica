@@ -47,8 +47,8 @@ const CreateCustomFeedModal = ({ isOpen, onClose, onFeedCreated }) => {
   };
 
   return createPortal(
-    <div className="custom-feed-modal-overlay" onClick={onClose}>
-      <div className="custom-feed-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="custom-feed-modal-overlay">
+      <div className="custom-feed-modal">
         <div className="custom-feed-modal-header">
           <h2>Create custom feed</h2>
           <button className="custom-feed-modal-close" onClick={onClose}>

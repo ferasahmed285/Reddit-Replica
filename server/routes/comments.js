@@ -4,6 +4,7 @@ const { authenticateToken, optionalAuth } = require('../middleware/auth');
 const Comment = require('../models/Comment');
 const Post = require('../models/Post');
 const Vote = require('../models/Vote');
+const User = require('../models/User');
 const { notifyPostComment, notifyCommentReply } = require('../utils/notifications');
 
 const router = express.Router();
@@ -262,6 +263,7 @@ router.post('/:id/vote', authenticateToken, async (req, res) => {
 
     const voteValue = vote === 'up' ? 1 : -1;
     let userVote = null;
+    let karmaChange = 0;
 
     const existingVote = await Vote.findOne({
       user: req.user.id,
@@ -273,17 +275,24 @@ router.post('/:id/vote', authenticateToken, async (req, res) => {
       if (existingVote.voteType === voteValue) {
         // Remove vote
         await Vote.findByIdAndDelete(existingVote._id);
-        if (voteValue === 1) comment.upvotes--;
-        else comment.downvotes--;
+        if (voteValue === 1) {
+          comment.upvotes--;
+          karmaChange = -1;
+        } else {
+          comment.downvotes--;
+          karmaChange = 1;
+        }
         userVote = null;
       } else {
         // Change vote
         if (existingVote.voteType === 1) {
           comment.upvotes--;
           comment.downvotes++;
+          karmaChange = -2;
         } else {
           comment.downvotes--;
           comment.upvotes++;
+          karmaChange = 2;
         }
         existingVote.voteType = voteValue;
         await existingVote.save();
@@ -297,12 +306,22 @@ router.post('/:id/vote', authenticateToken, async (req, res) => {
         targetType: 'comment',
         voteType: voteValue
       });
-      if (voteValue === 1) comment.upvotes++;
-      else comment.downvotes++;
+      if (voteValue === 1) {
+        comment.upvotes++;
+        karmaChange = 1;
+      } else {
+        comment.downvotes++;
+        karmaChange = -1;
+      }
       userVote = vote;
     }
 
     await comment.save();
+
+    // Update comment author's karma (don't update if voting on own comment)
+    if (comment.author.toString() !== req.user.id && karmaChange !== 0) {
+      await User.findByIdAndUpdate(comment.author, { $inc: { karma: karmaChange } });
+    }
 
     res.status(200).json({
       voteCount: comment.upvotes - comment.downvotes,

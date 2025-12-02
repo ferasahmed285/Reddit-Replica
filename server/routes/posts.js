@@ -4,6 +4,7 @@ const { authenticateToken, optionalAuth } = require('../middleware/auth');
 const Post = require('../models/Post');
 const Community = require('../models/Community');
 const Vote = require('../models/Vote');
+const User = require('../models/User');
 const UserActivity = require('../models/UserActivity');
 const { notifyPostUpvote } = require('../utils/notifications');
 
@@ -207,6 +208,7 @@ router.post('/:id/vote', authenticateToken, async (req, res) => {
     }
 
     const voteValue = vote === 'up' ? 1 : -1;
+    let karmaChange = 0;
 
     // Check for existing vote
     const existingVote = await Vote.findOne({
@@ -221,17 +223,24 @@ router.post('/:id/vote', authenticateToken, async (req, res) => {
       if (existingVote.voteType === voteValue) {
         // Remove vote (toggle off)
         await Vote.findByIdAndDelete(existingVote._id);
-        if (voteValue === 1) post.upvotes--;
-        else post.downvotes--;
+        if (voteValue === 1) {
+          post.upvotes--;
+          karmaChange = -1; // Removing upvote decreases karma
+        } else {
+          post.downvotes--;
+          karmaChange = 1; // Removing downvote increases karma
+        }
         userVote = null;
       } else {
         // Change vote
         if (existingVote.voteType === 1) {
           post.upvotes--;
           post.downvotes++;
+          karmaChange = -2; // Changing from upvote to downvote
         } else {
           post.downvotes--;
           post.upvotes++;
+          karmaChange = 2; // Changing from downvote to upvote
         }
         existingVote.voteType = voteValue;
         await existingVote.save();
@@ -247,15 +256,22 @@ router.post('/:id/vote', authenticateToken, async (req, res) => {
       });
       if (voteValue === 1) {
         post.upvotes++;
+        karmaChange = 1; // New upvote increases karma
         // Notify post author of upvote (only for new upvotes, not downvotes)
         await notifyPostUpvote(post, req.user);
       } else {
         post.downvotes++;
+        karmaChange = -1; // New downvote decreases karma
       }
       userVote = vote;
     }
 
     await post.save();
+
+    // Update post author's karma (don't update if voting on own post)
+    if (post.author.toString() !== req.user.id && karmaChange !== 0) {
+      await User.findByIdAndUpdate(post.author, { $inc: { karma: karmaChange } });
+    }
 
     res.status(200).json({
       voteCount: post.upvotes - post.downvotes,

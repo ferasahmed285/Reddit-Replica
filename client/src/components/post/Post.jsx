@@ -1,6 +1,6 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
-import { ArrowBigUp, ArrowBigDown, MessageSquare, Share2, Gift, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+import { ArrowBigUp, ArrowBigDown, MessageSquare, Share2, Sparkles, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import ShareModal from './ShareModal';
@@ -284,9 +284,9 @@ const Post = ({ post, onAuthRequired, onVoteUpdate, onPostDeleted, onPostUpdated
           <span>Share</span>
         </button>
         
-        {/* Award Pill */}
+        {/* AI Pill */}
         <button className="action-pill btn-award" onClick={(e) => e.stopPropagation()}>
-          <Gift size={18} />
+          <Sparkles size={18} />
         </button>
       </div>
 

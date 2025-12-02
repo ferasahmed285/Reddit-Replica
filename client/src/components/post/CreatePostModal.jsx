@@ -156,8 +156,8 @@ const CreatePostModal = ({ isOpen, onClose, subreddit, onPostCreated }) => {
   };
 
   return (
-    <div className="create-post-overlay" onClick={onClose}>
-      <div className="create-post-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="create-post-overlay">
+      <div className="create-post-modal">
         <div className="create-post-header">
           <h2>{subreddit ? `Create a post in r/${subreddit}` : 'Create a post'}</h2>
           <button className="create-post-close" onClick={onClose}>

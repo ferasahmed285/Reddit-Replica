@@ -175,12 +175,18 @@
 .custom-feed-actions .btn-cancel {
   padding: 10px 20px;
   background: var(--color-bg-secondary);
-  border: none;
+  border: 1px solid transparent;
   border-radius: var(--radius-full);
   color: var(--color-text-primary);
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
+  line-height: 1.2;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .custom-feed-actions .btn-cancel:hover {
@@ -190,12 +196,18 @@
 .custom-feed-actions .btn-submit {
   padding: 10px 20px;
   background: var(--color-blue);
-  border: none;
+  border: 1px solid transparent;
   border-radius: var(--radius-full);
   color: white;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
+  line-height: 1.2;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .custom-feed-actions .btn-submit:hover:not(:disabled) {
@@ -215,9 +227,15 @@
   border: 1px solid #ff4444;
   border-radius: var(--radius-full);
   color: #ff4444;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
+  line-height: 1.2;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .custom-feed-actions .btn-delete:hover {
@@ -226,6 +244,6 @@
 
 .custom-feed-actions .actions-right {
   display: flex;
+  align-items: center;
   gap: 12px;
-  margin-left: auto;
 }
