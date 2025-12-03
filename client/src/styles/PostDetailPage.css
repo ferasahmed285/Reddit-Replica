@@ -322,3 +322,26 @@
 .action-button span {
   font-size: 12px;
 }
+
+
+/* Comment login/join prompts */
+.comment-login-prompt,
+.comment-join-prompt {
+  text-align: center;
+  padding: 20px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.login-link {
+  background: none;
+  border: none;
+  color: var(--color-blue);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.login-link:hover {
+  text-decoration: underline;
+}

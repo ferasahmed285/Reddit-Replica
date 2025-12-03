@@ -19,7 +19,7 @@ const DownArrow = () => (
   </svg>
 );
 
-const Comment = ({ comment, onAuthRequired, onReplyAdded, onCommentUpdated, onCommentDeleted, depth = 0 }) => {
+const Comment = ({ comment, onAuthRequired, onReplyAdded, onCommentUpdated, onCommentDeleted, isMember, communityName, depth = 0 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [voteState, setVoteState] = useState(comment.userVote || null);
   const [voteCount, setVoteCount] = useState(comment.voteCount ?? (comment.upvotes - (comment.downvotes || 0)) ?? 0);
@@ -97,6 +97,8 @@ const Comment = ({ comment, onAuthRequired, onReplyAdded, onCommentUpdated, onCo
   const handleReply = () => {
     if (!currentUser) {
       onAuthRequired();
+    } else if (!isMember) {
+      showToast(`Join r/${communityName} to reply`, 'error');
     } else {
       setShowReplyForm(!showReplyForm);
     }
@@ -315,6 +317,8 @@ const Comment = ({ comment, onAuthRequired, onReplyAdded, onCommentUpdated, onCo
                     onReplyAdded={onReplyAdded}
                     onCommentUpdated={onCommentUpdated}
                     onCommentDeleted={onCommentDeleted}
+                    isMember={isMember}
+                    communityName={communityName}
                     depth={depth + 1}
                   />
                 ))}

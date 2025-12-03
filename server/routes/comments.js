@@ -5,6 +5,8 @@ const Comment = require('../models/Comment');
 const Post = require('../models/Post');
 const Vote = require('../models/Vote');
 const User = require('../models/User');
+const Community = require('../models/Community');
+const UserActivity = require('../models/UserActivity');
 const { notifyPostComment, notifyCommentReply } = require('../utils/notifications');
 
 const router = express.Router();
@@ -135,6 +137,15 @@ router.post(
       const post = await Post.findById(postId);
       if (!post) {
         return res.status(404).json({ message: 'Post not found' });
+      }
+
+      // Check if user is a member of the community
+      const userActivity = await UserActivity.findOne({ user: req.user.id });
+      const isMember = userActivity?.joinedCommunities?.some(
+        c => c.toString() === post.community.toString()
+      );
+      if (!isMember) {
+        return res.status(403).json({ message: 'You must join this community to comment' });
       }
 
       // Calculate depth if replying

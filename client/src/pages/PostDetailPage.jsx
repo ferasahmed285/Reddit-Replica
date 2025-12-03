@@ -12,7 +12,7 @@ import ShareModal from '../components/post/ShareModal';
 import EditPostModal from '../components/post/EditPostModal';
 import ConfirmModal from '../components/common/ConfirmModal';
 import { PostSkeleton, CommentListSkeleton } from '../components/common/LoadingSkeleton';
-import { postsAPI, commentsAPI } from '../services/api';
+import { postsAPI, commentsAPI, communitiesAPI } from '../services/api';
 import usePageTitle from '../hooks/usePageTitle';
 import '../styles/PostDetailPage.css';
 
@@ -31,6 +31,7 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+  const [isMember, setIsMember] = useState(false);
   const optionsRef = useRef(null);
   const { showToast } = useToast();
   const { startLoading, stopLoading } = useLoading();
@@ -61,6 +62,19 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
         ]);
         setPost(postData);
         setComments(commentsData);
+        
+        // Check if user is a member of the community
+        if (currentUser && postData.subreddit) {
+          try {
+            const joinedCommunities = await communitiesAPI.getJoined();
+            const memberOfCommunity = joinedCommunities.some(
+              c => c.name.toLowerCase() === postData.subreddit.toLowerCase()
+            );
+            setIsMember(memberOfCommunity);
+          } catch (err) {
+            console.error('Error checking membership:', err);
+          }
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -70,7 +84,7 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
     };
 
     fetchData();
-  }, [postId]);
+  }, [postId, currentUser]);
 
   const handleSavePost = async () => {
     if (!currentUser) {
@@ -317,27 +331,38 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
 
             {/* Comment Input */}
             <div className="comment-input-card">
-              <p className="comment-as">
-                Comment as <Link to={currentUser ? `/u/${currentUser.username}` : '#'}>
-                  u/{currentUser ? currentUser.username : 'guest'}
-                </Link>
-              </p>
-              <form onSubmit={handleCommentSubmit}>
-                <textarea
-                  className="comment-textarea"
-                  placeholder="What are your thoughts?"
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  onFocus={!currentUser ? onAuthAction : undefined}
-                  rows="4"
-                  disabled={submitting}
-                />
-                <div className="comment-actions">
-                  <button type="submit" className="btn-comment-submit" disabled={submitting || !commentText.trim()}>
-                    {submitting ? 'Posting...' : 'Comment'}
-                  </button>
-                </div>
-              </form>
+              {!currentUser ? (
+                <p className="comment-login-prompt">
+                  <button onClick={onAuthAction} className="login-link">Log in</button> to comment
+                </p>
+              ) : !isMember ? (
+                <p className="comment-join-prompt">
+                  Join r/{post.subreddit} to comment on this post
+                </p>
+              ) : (
+                <>
+                  <p className="comment-as">
+                    Comment as <Link to={`/u/${currentUser.username}`}>
+                      u/{currentUser.username}
+                    </Link>
+                  </p>
+                  <form onSubmit={handleCommentSubmit}>
+                    <textarea
+                      className="comment-textarea"
+                      placeholder="What are your thoughts?"
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      rows="4"
+                      disabled={submitting}
+                    />
+                    <div className="comment-actions">
+                      <button type="submit" className="btn-comment-submit" disabled={submitting || !commentText.trim()}>
+                        {submitting ? 'Posting...' : 'Comment'}
+                      </button>
+                    </div>
+                  </form>
+                </>
+              )}
             </div>
 
             {/* Comments Section */}
@@ -345,6 +370,8 @@ const PostDetailPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =
               <CommentList 
                 comments={comments} 
                 onAuthRequired={onAuthAction}
+                isMember={isMember}
+                communityName={post.subreddit}
                 onReplyAdded={(parentId, newReply) => {
                   // Add reply to the comments tree
                   setComments(prev => {
