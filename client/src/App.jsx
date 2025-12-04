@@ -19,6 +19,7 @@ import UserAgreementPage from './pages/UserAgreementPage';
 import SavedPostsPage from './pages/SavedPostsPage';
 import CustomFeedPage from './pages/CustomFeedPage';
 import ChatPage from './pages/ChatPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import Header from './components/layout/Header';
 import LoadingBar from './components/layout/LoadingBar';
 import LoginModal from './components/auth/LoginModal';
@@ -97,6 +98,7 @@ function App() {
             <Route path="/saved" element={<SavedPostsPage onAuthAction={openLogin} isSidebarCollapsed={isSidebarCollapsed} onToggleSidebar={toggleSidebar} />} />
             <Route path="/feed/:feedId" element={<CustomFeedPage isSidebarCollapsed={isSidebarCollapsed} onToggleSidebar={toggleSidebar} />} />
             <Route path="/chat" element={<ChatPage isSidebarCollapsed={isSidebarCollapsed} onToggleSidebar={toggleSidebar} />} />
+            <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
             <Route path="/r/:subreddit" element={<CommunityPage onAuthAction={openLogin} isSidebarCollapsed={isSidebarCollapsed} onToggleSidebar={toggleSidebar} />} />
             <Route path="/user/:username" element={<UserProfilePage onAuthAction={openLogin} isSidebarCollapsed={isSidebarCollapsed} onToggleSidebar={toggleSidebar} />} />
             <Route path="/u/:username" element={<UserProfilePage onAuthAction={openLogin} isSidebarCollapsed={isSidebarCollapsed} onToggleSidebar={toggleSidebar} />} />

@@ -64,6 +64,38 @@
   transform: rotate(90deg);
 }
 
+.modal-back-btn {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-back-btn:hover {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+.error-message {
+  color: #ff4500;
+  font-size: 14px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background-color: rgba(255, 69, 0, 0.1);
+  border-radius: var(--radius-sm);
+}
+
 /* --- Header & Legal --- */
 .modal-header h2 {
   margin: 0 0 8px 0;
