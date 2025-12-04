@@ -6,6 +6,7 @@ const Post = require('../models/Post');
 const Comment = require('../models/Comment');
 const Community = require('../models/Community');
 const Notification = require('../models/Notification');
+const Chat = require('../models/Chat');
 const { notifyFollow } = require('../utils/notifications');
 
 const router = express.Router();
@@ -80,6 +81,23 @@ router.put('/profile', authenticateToken, async (req, res) => {
         Notification.updateMany(
           { fromUser: req.user.id },
           { $set: { fromUsername: newUsername } }
+        ),
+        // Update chat participant usernames
+        Chat.updateMany(
+          { participants: req.user.id },
+          { $set: { 'participantUsernames.$[elem]': newUsername } },
+          { arrayFilters: [{ elem: oldUsername }] }
+        ),
+        // Update chat message sender usernames
+        Chat.updateMany(
+          { 'messages.sender': req.user.id },
+          { $set: { 'messages.$[msg].senderUsername': newUsername } },
+          { arrayFilters: [{ 'msg.sender': req.user.id }] }
+        ),
+        // Update chat lastMessage sender username
+        Chat.updateMany(
+          { 'lastMessage.senderUsername': oldUsername },
+          { $set: { 'lastMessage.senderUsername': newUsername } }
         )
       ]);
 

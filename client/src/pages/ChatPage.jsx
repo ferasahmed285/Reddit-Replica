@@ -1,15 +1,18 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Send, ArrowLeft, Search, MessageCircle } from 'lucide-react';
+import { Send, ArrowLeft, Search, MessageCircle, Trash2, Reply, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { chatsAPI, usersAPI } from '../services/api';
+import { useToast } from '../context/ToastContext';
 import Sidebar from '../components/layout/Sidebar';
+import ConfirmModal from '../components/common/ConfirmModal';
 import usePageTitle from '../hooks/usePageTitle';
 import '../styles/ChatPage.css';
 
 const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
   const { currentUser } = useAuth();
   const location = useLocation();
+  const { showToast } = useToast();
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -19,8 +22,16 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
   const [searchError, setSearchError] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [messageToDelete, setMessageToDelete] = useState(null);
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, message: null });
   const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const pollIntervalRef = useRef(null);
+  const isUserScrolledUp = useRef(false);
+  const lastMessageCount = useRef(0);
 
   usePageTitle('Messages');
 
@@ -70,6 +81,7 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
   useEffect(() => {
     if (!selectedChat) {
       setMessages([]);
+      lastMessageCount.current = 0;
       return;
     }
 
@@ -79,7 +91,18 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
       
       try {
         const data = await chatsAPI.getMessages(selectedChat.id);
-        setMessages(data);
+        // Only update if there are new messages to prevent unnecessary re-renders
+        setMessages(prev => {
+          // If we have temp messages, merge them properly
+          const tempMessages = prev.filter(m => String(m._id).startsWith('temp-'));
+          if (tempMessages.length > 0) {
+            // Keep temp messages that aren't in the new data yet
+            const newIds = new Set(data.map(m => m._id));
+            const remainingTemp = tempMessages.filter(t => !newIds.has(t._id));
+            return [...data, ...remainingTemp];
+          }
+          return data;
+        });
       } catch (error) {
         console.error('Error fetching messages:', error);
       }
@@ -87,8 +110,8 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
 
     fetchMessages();
 
-    // Poll for new messages every second
-    pollIntervalRef.current = setInterval(fetchMessages, 1000);
+    // Poll for new messages every 2 seconds (reduced frequency)
+    pollIntervalRef.current = setInterval(fetchMessages, 2000);
 
     return () => {
       if (pollIntervalRef.current) {
@@ -97,10 +120,21 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
     };
   }, [selectedChat, sending]);
 
+  // Handle scroll detection
+  const handleScroll = useCallback(() => {
+    if (!messagesContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+    // User is scrolled up if they're more than 100px from bottom
+    isUserScrolledUp.current = scrollHeight - scrollTop - clientHeight > 100;
+  }, []);
 
-  // Scroll to bottom when messages change
+  // Scroll to bottom only when appropriate
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Only auto-scroll if user hasn't scrolled up and there are new messages
+    if (!isUserScrolledUp.current && messages.length > lastMessageCount.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+    lastMessageCount.current = messages.length;
   }, [messages]);
 
   // Live search users
@@ -166,7 +200,9 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
     if (!newMessage.trim() || !selectedChat || sending) return;
 
     const content = newMessage.trim();
+    const replyToId = replyingTo?._id;
     setNewMessage('');
+    setReplyingTo(null);
     setSending(true);
 
     // Optimistic update
@@ -175,12 +211,18 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
       _id: tempId,
       senderUsername: currentUser.username,
       content,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      replyTo: replyToId || null,
+      replyToContent: replyingTo?.content?.substring(0, 100) || null,
+      replyToUsername: replyingTo?.senderUsername || null
     };
     setMessages(prev => [...prev, tempMessage]);
+    
+    // Reset scroll position to show new message
+    isUserScrolledUp.current = false;
 
     try {
-      const savedMessage = await chatsAPI.sendMessage(selectedChat.id, content);
+      const savedMessage = await chatsAPI.sendMessage(selectedChat.id, content, replyToId);
       
       // Replace temp message with real one
       setMessages(prev => prev.map(m => 
@@ -200,6 +242,75 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
       setNewMessage(content);
     } finally {
       setSending(false);
+      // Keep focus on input after sending
+      inputRef.current?.focus();
+    }
+  };
+
+  // Reply to message
+  const handleReply = (message) => {
+    if (message.deleted) return;
+    setReplyingTo(message);
+    setContextMenu({ visible: false, x: 0, y: 0, message: null });
+    inputRef.current?.focus();
+  };
+
+  // Context menu handler
+  const handleContextMenu = (e, msg) => {
+    e.preventDefault();
+    if (msg.deleted || String(msg._id).startsWith('temp-')) return;
+    
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      message: msg
+    });
+  };
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClick = () => setContextMenu({ visible: false, x: 0, y: 0, message: null });
+    if (contextMenu.visible) {
+      document.addEventListener('click', handleClick);
+      return () => document.removeEventListener('click', handleClick);
+    }
+  }, [contextMenu.visible]);
+
+  // Delete message
+  const handleDeleteMessage = async () => {
+    if (!messageToDelete || !selectedChat) return;
+    
+    try {
+      await chatsAPI.deleteMessage(selectedChat.id, messageToDelete._id);
+      // Update message in state
+      setMessages(prev => prev.map(m => 
+        m._id === messageToDelete._id 
+          ? { ...m, deleted: true, content: 'This message was deleted' }
+          : m
+      ));
+      setMessageToDelete(null);
+      showToast('Message deleted', 'success');
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      showToast(error.message || 'Failed to delete message', 'error');
+    }
+  };
+
+  // Delete chat
+  const handleDeleteChat = async () => {
+    if (!selectedChat) return;
+    
+    try {
+      await chatsAPI.delete(selectedChat.id);
+      setChats(prev => prev.filter(c => c.id !== selectedChat.id));
+      setSelectedChat(null);
+      setMessages([]);
+      setShowDeleteConfirm(false);
+      showToast('Chat deleted successfully', 'success');
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+      showToast(error.message || 'Failed to delete chat', 'error');
     }
   };
 
@@ -328,10 +439,21 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
                   </div>
                   <span className="chat-header-name">{selectedChat.otherUser}</span>
                 </Link>
+                <button 
+                  className="chat-delete-btn" 
+                  onClick={() => setShowDeleteConfirm(true)}
+                  title="Delete conversation"
+                >
+                  <Trash2 size={18} />
+                </button>
               </div>
 
               {/* Messages */}
-              <div className="chat-messages">
+              <div 
+                className="chat-messages" 
+                ref={messagesContainerRef}
+                onScroll={handleScroll}
+              >
                 {messages.length === 0 ? (
                   <div className="chat-messages-empty">
                     <p>No messages yet. Say hi! 👋</p>
@@ -339,12 +461,29 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
                 ) : (
                   messages.map((msg, index) => {
                     const isSent = msg.senderUsername?.toLowerCase() === currentUser.username?.toLowerCase();
+                    const isDeleted = msg.deleted;
                     return (
                       <div
                         key={msg._id || index}
-                        className={`chat-message ${isSent ? 'sent' : 'received'}`}
+                        className={`chat-message ${isSent ? 'sent' : 'received'} ${isDeleted ? 'deleted' : ''}`}
+                        onContextMenu={(e) => handleContextMenu(e, msg)}
                       >
-                        <div className="message-content">{msg.content}</div>
+                        {/* Reply preview */}
+                        {msg.replyTo && msg.replyToContent && (
+                          <div className="message-reply-preview">
+                            <span className="reply-username">{msg.replyToUsername}</span>
+                            <span className="reply-content">{msg.replyToContent}</span>
+                          </div>
+                        )}
+                        <div className="message-bubble">
+                          <div className="message-content">
+                            {isDeleted ? (
+                              <em className="deleted-text">{msg.content}</em>
+                            ) : (
+                              msg.content
+                            )}
+                          </div>
+                        </div>
                         <span className="message-time">{formatTime(msg.createdAt)}</span>
                       </div>
                     );
@@ -354,18 +493,38 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
               </div>
 
               {/* Message Input */}
-              <form className="chat-input-form" onSubmit={handleSendMessage}>
-                <input
-                  type="text"
-                  placeholder="Type a message..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  disabled={sending}
-                />
-                <button type="submit" disabled={!newMessage.trim() || sending}>
-                  <Send size={20} />
-                </button>
-              </form>
+              <div className="chat-input-container">
+                {/* Reply preview bar */}
+                {replyingTo && (
+                  <div className="reply-bar">
+                    <div className="reply-bar-content">
+                      <Reply size={16} />
+                      <span className="reply-bar-text">
+                        Replying to <strong>{replyingTo.senderUsername}</strong>: {replyingTo.content?.substring(0, 50)}...
+                      </span>
+                    </div>
+                    <button 
+                      className="reply-bar-close"
+                      onClick={() => setReplyingTo(null)}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
+                <form className="chat-input-form" onSubmit={handleSendMessage}>
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    placeholder="Type a message..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    disabled={sending}
+                  />
+                  <button type="submit" disabled={!newMessage.trim() || sending}>
+                    <Send size={20} />
+                  </button>
+                </form>
+              </div>
             </>
           ) : (
             <div className="chat-no-selection">
@@ -376,6 +535,59 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
           )}
         </div>
       </div>
+
+      {/* Delete Chat Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteChat}
+        title="Delete Conversation"
+        message={`Are you sure you want to delete this conversation with ${selectedChat?.otherUser}? This will delete the chat for both users and cannot be undone.`}
+        confirmText="Delete"
+        type="danger"
+      />
+
+      {/* Delete Message Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!messageToDelete}
+        onClose={() => setMessageToDelete(null)}
+        onConfirm={handleDeleteMessage}
+        title="Delete Message"
+        message="Are you sure you want to delete this message? This cannot be undone."
+        confirmText="Delete"
+        type="danger"
+      />
+
+      {/* Context Menu */}
+      {contextMenu.visible && contextMenu.message && (
+        <div 
+          className="message-context-menu"
+          style={{ 
+            top: contextMenu.y, 
+            left: contextMenu.x 
+          }}
+        >
+          <button 
+            className="context-menu-item"
+            onClick={() => handleReply(contextMenu.message)}
+          >
+            <Reply size={16} />
+            Reply
+          </button>
+          {contextMenu.message.senderUsername?.toLowerCase() === currentUser.username?.toLowerCase() && (
+            <button 
+              className="context-menu-item delete"
+              onClick={() => {
+                setMessageToDelete(contextMenu.message);
+                setContextMenu({ visible: false, x: 0, y: 0, message: null });
+              }}
+            >
+              <Trash2 size={16} />
+              Delete
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };

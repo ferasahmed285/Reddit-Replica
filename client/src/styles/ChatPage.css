@@ -440,3 +440,263 @@
 .chat-header-user-link:hover {
   opacity: 0.8;
 }
+
+
+/* Delete chat button */
+.chat-delete-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.chat-delete-btn:hover {
+  background: rgba(255, 68, 68, 0.1);
+  color: #ff4444;
+}
+
+
+/* Reply preview in message */
+.message-reply-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px;
+  margin-bottom: 4px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  border-left: 3px solid var(--color-primary);
+  font-size: 12px;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.chat-message.sent .message-reply-preview {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.reply-username {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.chat-message.sent .reply-username {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.reply-content {
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-message.sent .reply-content {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Message bubble wrapper */
+.message-bubble {
+  position: relative;
+  display: inline-block;
+}
+
+/* Message actions */
+.message-actions {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  pointer-events: none;
+}
+
+.chat-message.sent .message-actions {
+  right: 100%;
+  margin-right: 8px;
+}
+
+.chat-message.received .message-actions {
+  left: 100%;
+  margin-left: 8px;
+}
+
+.chat-message:hover .message-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.message-action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-bg-card);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.message-action-btn:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.message-action-btn.delete:hover {
+  background: rgba(255, 68, 68, 0.1);
+  color: #ff4444;
+}
+
+/* Deleted message style */
+.chat-message.deleted .message-content {
+  opacity: 0.6;
+}
+
+.deleted-text {
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+.chat-message.sent.deleted .deleted-text {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Reply bar above input */
+.chat-input-container {
+  background: var(--color-bg-card);
+  border-top: 1px solid var(--color-border);
+}
+
+.reply-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.reply-bar-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  overflow: hidden;
+}
+
+.reply-bar-content svg {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.reply-bar-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reply-bar-text strong {
+  color: var(--color-text-primary);
+}
+
+.reply-bar-close {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.reply-bar-close:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+/* Fix input form when inside container */
+.chat-input-container .chat-input-form {
+  border-top: none;
+}
+
+
+/* Context Menu */
+.message-context-menu {
+  position: fixed;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 140px;
+  overflow: hidden;
+  animation: contextMenuFadeIn 0.15s ease-out;
+}
+
+@keyframes contextMenuFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-align: left;
+}
+
+.context-menu-item:hover {
+  background: var(--color-bg-secondary);
+}
+
+.context-menu-item.delete {
+  color: #ff4444;
+}
+
+.context-menu-item.delete:hover {
+  background: rgba(255, 68, 68, 0.1);
+}
+
+.context-menu-item svg {
+  flex-shrink: 0;
+}
+
+/* Right-click hint on messages */
+.chat-message {
+  cursor: context-menu;
+}
+
+.chat-message.deleted {
+  cursor: default;
+}

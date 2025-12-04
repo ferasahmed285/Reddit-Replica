@@ -229,3 +229,10 @@
 .custom-feed-actions .btn-delete:hover {
   background: rgba(255, 68, 68, 0.1);
 }
+
+
+/* Dark mode: white outline for inputs */
+.dark-mode .custom-feed-input:focus,
+.dark-mode .custom-feed-textarea:focus {
+  border-color: white;
+}

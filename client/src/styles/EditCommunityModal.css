@@ -176,3 +176,10 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+
+/* Dark mode: white outline for inputs */
+.dark-mode .edit-community-form input:focus,
+.dark-mode .edit-community-form textarea:focus {
+  border-color: white;
+}

@@ -172,3 +172,9 @@
   text-align: center;
   color: var(--color-text-secondary);
 }
+
+
+/* Dark mode: white outline for search input */
+.dark-mode .add-communities-search input:focus {
+  border-color: white;
+}

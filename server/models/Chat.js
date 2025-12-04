@@ -18,6 +18,24 @@ const messageSchema = new mongoose.Schema({
   read: {
     type: Boolean,
     default: false
+  },
+  // Reply feature
+  replyTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    default: null
+  },
+  replyToContent: {
+    type: String,
+    default: null
+  },
+  replyToUsername: {
+    type: String,
+    default: null
+  },
+  // Soft delete
+  deleted: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

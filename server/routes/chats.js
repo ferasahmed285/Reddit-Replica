@@ -176,7 +176,7 @@ router.get('/:id/messages', authenticateToken, async (req, res) => {
   }
 });
 
-// POST /api/chats/:id/messages - Send a message
+// POST /api/chats/:id/messages - Send a message (with optional reply)
 router.post(
   '/:id/messages',
   authenticateToken,
@@ -200,7 +200,7 @@ router.post(
         return res.status(403).json({ message: 'Not authorized' });
       }
 
-      const { content } = req.body;
+      const { content, replyToId } = req.body;
 
       const newMessage = {
         sender: req.user.id,
@@ -208,6 +208,16 @@ router.post(
         content,
         read: false
       };
+
+      // Handle reply
+      if (replyToId) {
+        const replyToMessage = chat.messages.id(replyToId);
+        if (replyToMessage && !replyToMessage.deleted) {
+          newMessage.replyTo = replyToMessage._id;
+          newMessage.replyToContent = replyToMessage.content.substring(0, 100);
+          newMessage.replyToUsername = replyToMessage.senderUsername;
+        }
+      }
 
       chat.messages.push(newMessage);
       chat.lastMessage = {
@@ -228,5 +238,77 @@ router.post(
     }
   }
 );
+
+// DELETE /api/chats/:chatId/messages/:messageId - Delete a message (soft delete)
+router.delete('/:chatId/messages/:messageId', authenticateToken, async (req, res) => {
+  try {
+    const chat = await Chat.findById(req.params.chatId);
+
+    if (!chat) {
+      return res.status(404).json({ message: 'Chat not found' });
+    }
+
+    if (!chat.participants.some(p => p.toString() === req.user.id)) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    const message = chat.messages.id(req.params.messageId);
+
+    if (!message) {
+      return res.status(404).json({ message: 'Message not found' });
+    }
+
+    // Only the sender can delete their message
+    if (message.sender.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'You can only delete your own messages' });
+    }
+
+    // Soft delete - mark as deleted
+    message.deleted = true;
+    message.content = 'This message was deleted';
+
+    // Update lastMessage if this was the last message
+    if (chat.messages.length > 0) {
+      const lastMsg = chat.messages[chat.messages.length - 1];
+      if (lastMsg._id.toString() === req.params.messageId) {
+        chat.lastMessage = {
+          content: 'This message was deleted',
+          senderUsername: message.senderUsername,
+          createdAt: message.createdAt
+        };
+      }
+    }
+
+    await chat.save();
+
+    res.status(200).json({ message: 'Message deleted successfully' });
+  } catch (error) {
+    console.error('Delete message error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// DELETE /api/chats/:id - Delete a chat (for both users)
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const chat = await Chat.findById(req.params.id);
+
+    if (!chat) {
+      return res.status(404).json({ message: 'Chat not found' });
+    }
+
+    // Verify user is participant
+    if (!chat.participants.some(p => p.toString() === req.user.id)) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    await Chat.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({ message: 'Chat deleted successfully' });
+  } catch (error) {
+    console.error('Delete chat error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 module.exports = router;

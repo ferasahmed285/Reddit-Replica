@@ -228,3 +228,15 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+
+/* Dark mode: white outline for inputs */
+.dark-mode .input-prefix-wrapper:focus-within {
+  border-color: white;
+}
+
+.dark-mode .create-community-form input:focus,
+.dark-mode .create-community-form textarea:focus,
+.dark-mode .create-community-form .category-select:focus {
+  border-color: white;
+}

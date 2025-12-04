@@ -199,8 +199,16 @@ export const chatsAPI = {
   
   getMessages: (chatId) => apiRequest(`/chats/${chatId}/messages`),
   
-  sendMessage: (chatId, content) => apiRequest(`/chats/${chatId}/messages`, {
+  sendMessage: (chatId, content, replyToId = null) => apiRequest(`/chats/${chatId}/messages`, {
     method: 'POST',
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ content, replyToId }),
+  }),
+  
+  deleteMessage: (chatId, messageId) => apiRequest(`/chats/${chatId}/messages/${messageId}`, {
+    method: 'DELETE',
+  }),
+  
+  delete: (chatId) => apiRequest(`/chats/${chatId}`, {
+    method: 'DELETE',
   }),
 };

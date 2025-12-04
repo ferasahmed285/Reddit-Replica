@@ -58,6 +58,12 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* Dark mode: white outline for search */
+.dark-mode .search-input-wrapper:hover,
+.dark-mode .search-input-wrapper:focus-within {
+  border-color: white;
+}
+
 .search-icon {
   color: var(--color-text-secondary);
   margin-right: 8px;
@@ -70,6 +76,12 @@
   outline: none;
   width: 100%;
   font-size: 14px;
+  box-shadow: none;
+}
+
+.search-input:focus {
+  outline: none;
+  box-shadow: none;
 }
 
 /* Right Section */
@@ -152,6 +164,10 @@
   border-color: var(--color-blue);
   background-color: var(--color-bg-card);
   box-shadow: var(--shadow-sm);
+}
+
+.dark-mode .search-input-wrapper.focused {
+  border-color: white;
 }
 
 .search-clear-btn {

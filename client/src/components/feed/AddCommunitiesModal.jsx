@@ -21,7 +21,7 @@ const AddCommunitiesModal = ({ isOpen, onClose, feed, onCommunitiesUpdated }) =>
   const fetchCommunities = async () => {
     try {
       setLoading(true);
-      const data = await communitiesAPI.getAll();
+      const data = await communitiesAPI.getJoined();
       setAllCommunities(data);
     } catch (error) {
       console.error('Error fetching communities:', error);
