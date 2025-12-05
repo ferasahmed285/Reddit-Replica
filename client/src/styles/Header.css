@@ -575,3 +575,219 @@ button.mobile-only {
     display: inline-flex !important;
   }
 }
+
+
+/* ==================== PROFILE DROPDOWN (Reddit-style) ==================== */
+
+.profile-dropdown-container {
+  position: relative;
+}
+
+.profile-avatar-btn {
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+}
+
+.profile-avatar-btn:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.profile-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-border);
+  transition: border-color var(--transition-fast);
+}
+
+.profile-avatar-btn:hover .profile-avatar {
+  border-color: var(--color-primary);
+}
+
+.profile-online-indicator {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 10px;
+  height: 10px;
+  background-color: #46d160;
+  border-radius: 50%;
+  border: 2px solid var(--color-bg-card);
+}
+
+/* Profile Dropdown Menu */
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  min-width: 260px;
+  z-index: 1000;
+  overflow: hidden;
+  animation: fadeInDown 0.15s ease-out;
+}
+
+.profile-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color var(--transition-fast);
+  text-align: left;
+}
+
+.profile-dropdown-item:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.profile-dropdown-item svg {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.profile-dropdown-item:hover svg {
+  color: var(--color-text-primary);
+}
+
+/* Profile Header in Dropdown */
+.profile-dropdown-header {
+  padding: 14px 16px;
+}
+
+.profile-dropdown-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.profile-dropdown-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.profile-dropdown-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.profile-dropdown-username {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+/* Divider */
+.profile-dropdown-divider {
+  height: 1px;
+  background-color: var(--color-border-light);
+  margin: 4px 0;
+}
+
+/* Dark Mode Toggle Row */
+.profile-dropdown-toggle {
+  justify-content: space-between;
+  cursor: default;
+}
+
+.profile-dropdown-toggle:hover {
+  background-color: transparent;
+}
+
+.profile-dropdown-toggle-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-dropdown-toggle-left svg {
+  color: var(--color-text-secondary);
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background-color: var(--color-bg-secondary);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.toggle-switch.active {
+  background-color: var(--color-primary);
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch.active .toggle-slider {
+  transform: translateX(20px);
+}
+
+/* Logout Button */
+.profile-dropdown-logout {
+  color: var(--color-error);
+}
+
+.profile-dropdown-logout svg {
+  color: var(--color-error);
+}
+
+.profile-dropdown-logout:hover {
+  background-color: rgba(255, 69, 0, 0.1);
+}
+
+.profile-dropdown-logout:hover svg {
+  color: var(--color-error);
+}
+
+/* Mobile adjustments for profile dropdown */
+@media (max-width: 768px) {
+  .profile-avatar {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .profile-online-indicator {
+    width: 8px;
+    height: 8px;
+    bottom: 2px;
+    right: 2px;
+  }
+  
+  .profile-dropdown {
+    min-width: 240px;
+    right: -8px;
+  }
+}

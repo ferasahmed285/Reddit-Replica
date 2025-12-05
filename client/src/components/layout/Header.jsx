@@ -274,8 +274,8 @@ const GuestMenu = ({ onLoginClick }) => {
   );
 };
 
-// Mobile user menu for logged-in users
-const UserMenu = ({ username, onLogout }) => {
+// Profile dropdown menu for logged-in users (Reddit-style)
+const ProfileDropdown = ({ user, onLogout, isDarkMode, onToggleDarkMode }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
@@ -292,29 +292,67 @@ const UserMenu = ({ username, onLogout }) => {
   }, []);
 
   return (
-    <div className="user-menu-container" ref={menuRef}>
+    <div className="profile-dropdown-container" ref={menuRef}>
       <button 
-        className="btn btn-icon btn-more"
+        className="profile-avatar-btn"
         onClick={() => setIsMenuOpen(!isMenuOpen)}
         aria-label="User menu"
+        aria-expanded={isMenuOpen}
       >
-        <MoreHorizontal size={20} />
+        <img 
+          src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`} 
+          alt={user.username}
+          className="profile-avatar"
+        />
+        <span className="profile-online-indicator"></span>
       </button>
 
       {isMenuOpen && (
-        <div className="user-menu-dropdown">
+        <div className="profile-dropdown">
+          {/* View Profile */}
           <button 
-            className="user-menu-item"
+            className="profile-dropdown-item profile-dropdown-header"
             onClick={() => {
-              navigate(`/user/${username}`);
+              navigate(`/user/${user.username}`);
               setIsMenuOpen(false);
             }}
           >
-            <User size={20} />
-            <span>My Profile</span>
+            <img 
+              src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`} 
+              alt={user.username}
+              className="profile-dropdown-avatar"
+            />
+            <div className="profile-dropdown-info">
+              <span className="profile-dropdown-label">View Profile</span>
+              <span className="profile-dropdown-username">u/{user.username}</span>
+            </div>
           </button>
+
+          <div className="profile-dropdown-divider"></div>
+
+          {/* Dark Mode Toggle */}
+          <div className="profile-dropdown-item profile-dropdown-toggle">
+            <div className="profile-dropdown-toggle-left">
+              <Moon size={20} />
+              <span>Dark Mode</span>
+            </div>
+            <button 
+              className={`toggle-switch ${isDarkMode ? 'active' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleDarkMode();
+              }}
+              aria-label={isDarkMode ? "Disable dark mode" : "Enable dark mode"}
+            >
+              <span className="toggle-slider"></span>
+            </button>
+          </div>
+
+          <div className="profile-dropdown-divider"></div>
+
+          {/* Log Out */}
           <button 
-            className="user-menu-item user-menu-item-danger"
+            className="profile-dropdown-item profile-dropdown-logout"
             onClick={() => {
               onLogout();
               setIsMenuOpen(false);
@@ -358,15 +396,17 @@ const Header = ({ onLoginClick, isDarkMode, onToggleDarkMode }) => {
 
       {/* Right: Actions */}
       <div className="header-right">
-        {/* Dark/Light mode toggle */}
-        <button 
-          className="btn btn-icon" 
-          onClick={onToggleDarkMode}
-          aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
-          title={isDarkMode ? "Light mode" : "Dark mode"}
-        >
-          {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-        </button>
+        {/* Dark/Light mode toggle - only show for guests */}
+        {!currentUser && (
+          <button 
+            className="btn btn-icon" 
+            onClick={onToggleDarkMode}
+            aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+            title={isDarkMode ? "Light mode" : "Dark mode"}
+          >
+            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+        )}
 
         {/* Desktop: Get App button - only show for guests */}
         {!currentUser && (
@@ -403,20 +443,13 @@ const Header = ({ onLoginClick, isDarkMode, onToggleDarkMode }) => {
             ...
           </div>
         ) : currentUser ? (
-          <>
-            {/* Desktop: Show username and logout button */}
-            <Link to={`/user/${currentUser.username}`} className="btn btn-secondary desktop-only" style={{ textDecoration: 'none' }}>
-              <User size={16} style={{ marginRight: '4px' }} />
-              {currentUser.username}
-            </Link>
-            <button className="btn btn-icon desktop-only" onClick={logout} aria-label="Logout" title="Logout">
-              <LogOut size={20} />
-            </button>
-            {/* Mobile: Show dropdown menu */}
-            <div className="mobile-only">
-              <UserMenu username={currentUser.username} onLogout={logout} />
-            </div>
-          </>
+          /* Profile dropdown for logged-in users */
+          <ProfileDropdown 
+            user={currentUser}
+            onLogout={logout}
+            isDarkMode={isDarkMode}
+            onToggleDarkMode={onToggleDarkMode}
+          />
         ) : (
           <>
             {/* Desktop: Log In button */}
