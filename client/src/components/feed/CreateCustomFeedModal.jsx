@@ -32,7 +32,7 @@ const CreateCustomFeedModal = ({ isOpen, onClose, onFeedCreated }) => {
         showOnProfile
       });
       
-      showToast(`Custom feed "${name}" created! 🎉`, 'success');
+      showToast(`Custom feed "${name}" created`, 'success');
       setName('');
       setDescription('');
       setIsPrivate(false);

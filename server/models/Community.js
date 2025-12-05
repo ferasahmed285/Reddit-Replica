@@ -83,7 +83,7 @@ communitySchema.methods.toJSON = function() {
 };
 
 // Indexes for faster queries
-communitySchema.index({ name: 1 });
+// Note: name already has an index from unique: true
 communitySchema.index({ memberCount: -1 });
 communitySchema.index({ category: 1 });
 communitySchema.index({ creator: 1 });

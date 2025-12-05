@@ -52,6 +52,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
   },
+  bannerUrl: {
+    type: String,
+    default: ''
+  },
   karma: {
     type: Number,
     default: 1
@@ -104,8 +108,7 @@ userSchema.methods.toJSON = function() {
 };
 
 // Indexes for faster queries
-userSchema.index({ username: 1 }); // For username lookups (case-insensitive searches)
-userSchema.index({ email: 1 }); // For email lookups
+// Note: username and email already have indexes from unique: true
 userSchema.index({ createdAt: -1 }); // For sorting by newest
 
 module.exports = mongoose.model('User', userSchema);

@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 // Simple cache for communities to avoid refetching
 let communitiesCache = null;
 let cacheTimestamp = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 30 * 1000; // 30 seconds
 
 const PostList = ({ filterBySubreddit, filterByAuthor, sortBy, onAuthRequired }) => {
   const [posts, setPosts] = useState([]);

@@ -3,9 +3,30 @@ import { useState, useContext, createContext, useEffect } from 'react';
 const AuthContext = createContext();
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+// Try to get cached user from localStorage for instant load
+const getCachedUser = () => {
+  try {
+    const cached = localStorage.getItem('cachedUser');
+    if (cached) return JSON.parse(cached);
+  } catch {}
+  return null;
+};
+
+const setCachedUser = (user) => {
+  try {
+    if (user) {
+      localStorage.setItem('cachedUser', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('cachedUser');
+    }
+  } catch {}
+};
+
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Initialize with cached user for instant UI (no loading state)
+  const token = localStorage.getItem('authToken');
+  const [currentUser, setCurrentUser] = useState(token ? getCachedUser() : null);
+  const [loading, setLoading] = useState(!!token && !getCachedUser()); // Only loading if token exists but no cache
 
   // Check if user is logged in on mount
   useEffect(() => {
@@ -19,13 +40,18 @@ export const AuthProvider = ({ children }) => {
           if (response.ok) {
             const userData = await response.json();
             setCurrentUser(userData);
+            setCachedUser(userData); // Cache for next load
           } else {
             localStorage.removeItem('authToken');
+            setCachedUser(null);
+            setCurrentUser(null);
           }
         }
       } catch (error) {
         console.error('Auth check failed:', error);
         localStorage.removeItem('authToken');
+        setCachedUser(null);
+        setCurrentUser(null);
       } finally {
         setLoading(false);
       }
@@ -43,6 +69,7 @@ export const AuthProvider = ({ children }) => {
   // Logout
   const logout = async () => {
     localStorage.removeItem('authToken');
+    setCachedUser(null);
     window.location.reload();
   };
 

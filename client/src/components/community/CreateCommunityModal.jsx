@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Users } from 'lucide-react';
+import { X, Users, Link, Upload } from 'lucide-react';
 import { communitiesAPI } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import '../../styles/CreateCommunityModal.css';
@@ -20,6 +20,38 @@ const COMMUNITY_CATEGORIES = [
   'Other'
 ];
 
+// Compress image using canvas
+const compressImage = (file, maxWidth, maxHeight, quality = 0.8) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        
+        // Calculate new dimensions
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convert to compressed base64
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
 const CreateCommunityModal = ({ isOpen, onClose, onCommunityCreated }) => {
   const [name, setName] = useState('');
   const [title, setTitle] = useState('');
@@ -27,8 +59,44 @@ const CreateCommunityModal = ({ isOpen, onClose, onCommunityCreated }) => {
   const [category, setCategory] = useState('');
   const [iconUrl, setIconUrl] = useState('');
   const [bannerUrl, setBannerUrl] = useState('');
+  const [iconMode, setIconMode] = useState('url'); // 'url' or 'upload'
+  const [bannerMode, setBannerMode] = useState('url'); // 'url' or 'upload'
   const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
+
+  // Handle file upload for icon (compress to 200x200)
+  const handleIconUpload = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('Icon file size must be less than 5MB', 'error');
+        return;
+      }
+      try {
+        const compressed = await compressImage(file, 200, 200, 0.8);
+        setIconUrl(compressed);
+      } catch {
+        showToast('Failed to process image', 'error');
+      }
+    }
+  };
+
+  // Handle file upload for banner (compress to 1200x400)
+  const handleBannerUpload = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        showToast('Banner file size must be less than 10MB', 'error');
+        return;
+      }
+      try {
+        const compressed = await compressImage(file, 1920, 600, 0.92);
+        setBannerUrl(compressed);
+      } catch {
+        showToast('Failed to process image', 'error');
+      }
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -63,7 +131,7 @@ const CreateCommunityModal = ({ isOpen, onClose, onCommunityCreated }) => {
       };
 
       const newCommunity = await communitiesAPI.create(communityData);
-      showToast(`r/${name} created successfully! 🎉`, 'success');
+      showToast(`r/${name} created successfully`, 'success');
       
       // Reset form
       setName('');
@@ -72,6 +140,8 @@ const CreateCommunityModal = ({ isOpen, onClose, onCommunityCreated }) => {
       setCategory('');
       setIconUrl('');
       setBannerUrl('');
+      setIconMode('url');
+      setBannerMode('url');
       
       onClose();
       if (onCommunityCreated) {
@@ -155,25 +225,111 @@ const CreateCommunityModal = ({ isOpen, onClose, onCommunityCreated }) => {
           </div>
 
           <div className="form-group">
-            <label>Icon URL</label>
-            <input
-              type="url"
-              value={iconUrl}
-              onChange={(e) => setIconUrl(e.target.value)}
-              placeholder="https://example.com/icon.png"
-              disabled={loading}
-            />
+            <label>Community Icon</label>
+            <div className="image-mode-tabs">
+              <button
+                type="button"
+                className={`image-mode-tab ${iconMode === 'url' ? 'active' : ''}`}
+                onClick={() => { setIconMode('url'); setIconUrl(''); }}
+              >
+                <Link size={16} />
+                URL
+              </button>
+              <button
+                type="button"
+                className={`image-mode-tab ${iconMode === 'upload' ? 'active' : ''}`}
+                onClick={() => { setIconMode('upload'); setIconUrl(''); }}
+              >
+                <Upload size={16} />
+                Upload
+              </button>
+            </div>
+            
+            {iconMode === 'url' ? (
+              <input
+                type="url"
+                value={iconUrl}
+                onChange={(e) => setIconUrl(e.target.value)}
+                placeholder="https://example.com/icon.png"
+                disabled={loading}
+              />
+            ) : (
+              <div className="file-upload-area">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleIconUpload}
+                  className="file-input"
+                  id="icon-upload"
+                  disabled={loading}
+                />
+                <label htmlFor="icon-upload" className="file-upload-label">
+                  <Upload size={24} />
+                  <span>Click to upload icon</span>
+                  <span className="file-hint">PNG, JPG, GIF up to 5MB</span>
+                </label>
+              </div>
+            )}
+            
+            {iconUrl && (
+              <div className="image-preview icon-preview">
+                <img src={iconUrl} alt="Icon Preview" onError={(e) => e.target.style.display = 'none'} />
+              </div>
+            )}
           </div>
 
           <div className="form-group">
-            <label>Banner URL</label>
-            <input
-              type="url"
-              value={bannerUrl}
-              onChange={(e) => setBannerUrl(e.target.value)}
-              placeholder="https://example.com/banner.png"
-              disabled={loading}
-            />
+            <label>Community Banner</label>
+            <div className="image-mode-tabs">
+              <button
+                type="button"
+                className={`image-mode-tab ${bannerMode === 'url' ? 'active' : ''}`}
+                onClick={() => { setBannerMode('url'); setBannerUrl(''); }}
+              >
+                <Link size={16} />
+                URL
+              </button>
+              <button
+                type="button"
+                className={`image-mode-tab ${bannerMode === 'upload' ? 'active' : ''}`}
+                onClick={() => { setBannerMode('upload'); setBannerUrl(''); }}
+              >
+                <Upload size={16} />
+                Upload
+              </button>
+            </div>
+            
+            {bannerMode === 'url' ? (
+              <input
+                type="url"
+                value={bannerUrl}
+                onChange={(e) => setBannerUrl(e.target.value)}
+                placeholder="https://example.com/banner.png"
+                disabled={loading}
+              />
+            ) : (
+              <div className="file-upload-area">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBannerUpload}
+                  className="file-input"
+                  id="banner-upload"
+                  disabled={loading}
+                />
+                <label htmlFor="banner-upload" className="file-upload-label">
+                  <Upload size={24} />
+                  <span>Click to upload banner</span>
+                  <span className="file-hint">PNG, JPG, GIF up to 10MB</span>
+                </label>
+              </div>
+            )}
+            
+            {bannerUrl && (
+              <div className="image-preview banner-preview">
+                <img src={bannerUrl} alt="Banner Preview" onError={(e) => e.target.style.display = 'none'} />
+              </div>
+            )}
           </div>
 
           <div className="create-community-actions">

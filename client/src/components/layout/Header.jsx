@@ -25,7 +25,7 @@ const LogoIcon = () => (
 // Cache for communities in search
 let searchCommunitiesCache = null;
 let searchCacheTimestamp = 0;
-const SEARCH_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const SEARCH_CACHE_DURATION = 30 * 1000; // 30 seconds
 
 const SearchBar = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -368,15 +368,17 @@ const Header = ({ onLoginClick, isDarkMode, onToggleDarkMode }) => {
           {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
         </button>
 
-        {/* Desktop: Get App button */}
-        <button className="btn btn-get-app desktop-only" aria-label="Get App">
-          <Smartphone size={18} />
-          Get App
-        </button>
+        {/* Desktop: Get App button - only show for guests */}
+        {!currentUser && (
+          <button className="btn btn-get-app desktop-only" aria-label="Get App">
+            <Smartphone size={18} />
+            Get App
+          </button>
+        )}
 
-        {/* Mobile only: Create Post button */}
+        {/* Create Post button - show for logged-in users on all screens, mobile only for guests */}
         <button 
-          className="btn btn-icon mobile-only" 
+          className={`btn btn-icon ${currentUser ? '' : 'mobile-only'}`}
           onClick={handleCreatePostClick}
           aria-label="Create Post"
           title="Create Post"

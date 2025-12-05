@@ -153,8 +153,22 @@ const LoginModal = ({ isOpen, onClose }) => {
     setError('');
     setLoading(true);
 
-    if (!username.trim() || !password.trim()) {
+    const trimmedUsername = username.trim();
+    
+    if (!trimmedUsername || !password.trim()) {
       setError('Please fill in all fields');
+      setLoading(false);
+      return;
+    }
+    
+    if (trimmedUsername.length < 3 || trimmedUsername.length > 20) {
+      setError('Username must be between 3 and 20 characters');
+      setLoading(false);
+      return;
+    }
+    
+    if (!/^[a-z0-9_]+$/.test(trimmedUsername)) {
+      setError('Username can only contain lowercase letters, numbers, and underscores');
       setLoading(false);
       return;
     }
@@ -396,7 +410,7 @@ const LoginModal = ({ isOpen, onClose }) => {
             <div className="modal-header">
               <h2>Create your username and password</h2>
               <p className="legal-text">
-                Reddit is anonymous, so your username is what you'll go by here. Choose wisely, because once you get a name, you can't change it.
+                Reddit is anonymous, so your username is what you'll go by here. Choose wisely—usernames can only contain lowercase letters, numbers, and underscores.
               </p>
             </div>
 
@@ -406,11 +420,12 @@ const LoginModal = ({ isOpen, onClose }) => {
               <div className="input-group">
                 <input 
                   type="text" 
-                  placeholder="Username *" 
+                  placeholder="Username (lowercase, 3-20 chars) *" 
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                   required
                   disabled={loading}
+                  maxLength={20}
                 />
               </div>
               

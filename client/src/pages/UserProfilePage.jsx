@@ -5,8 +5,9 @@ import { useToast } from '../context/ToastContext';
 import Sidebar from '../components/layout/Sidebar';
 import { UserProfileSkeleton, PostListSkeleton } from '../components/common/LoadingSkeleton';
 import EditProfileModal from '../components/user/EditProfileModal';
+import ChangePasswordModal from '../components/user/ChangePasswordModal';
 import { postsAPI, usersAPI, commentsAPI, customFeedsAPI, chatsAPI } from '../services/api';
-import { MessageSquare, Cake, Award, Bookmark, Settings, LayoutGrid, MessageCircle, ChevronDown } from 'lucide-react';
+import { MessageSquare, Cake, Award, Bookmark, Settings, LayoutGrid, MessageCircle, ChevronDown, Lock } from 'lucide-react';
 import usePageTitle from '../hooks/usePageTitle';
 import '../styles/UserProfilePage.css';
 
@@ -26,6 +27,7 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [isTabDropdownOpen, setIsTabDropdownOpen] = useState(false);
   const tabDropdownRef = useRef(null);
   
@@ -118,7 +120,7 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
       usersAPI.getFollowers(username).then(setFollowers).catch(() => {});
       // Show toast
       showToast(
-        newFollowing ? `You're now following u/${username}! 🎉` : `Unfollowed u/${username}`,
+        newFollowing ? `You're now following u/${username}` : `Unfollowed u/${username}`,
         'success'
       );
     } catch (error) {
@@ -167,7 +169,14 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
         <div style={{ flex: 1, padding: '20px 24px', maxWidth: '1010px' }}>
           {/* Profile Header */}
           <div className="profile-header">
-            <div className="profile-banner" style={{ background: user.bannerColor || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }} />
+            <div 
+              className="profile-banner" 
+              style={{ 
+                background: user.bannerUrl 
+                  ? `url(${user.bannerUrl}) center/cover` 
+                  : (user.bannerColor || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)') 
+              }} 
+            />
             
             <div className="profile-info-container">
               <div className="profile-avatar-section">
@@ -204,10 +213,16 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
                   </button>
                 )}
                 {isOwnProfile ? (
-                  <button className="btn-profile-action btn-secondary" onClick={() => setIsEditModalOpen(true)}>
-                    <Settings size={16} />
-                    Edit
-                  </button>
+                  <>
+                    <button className="btn-profile-action btn-secondary" onClick={() => setIsEditModalOpen(true)}>
+                      <Settings size={16} />
+                      Edit
+                    </button>
+                    <button className="btn-profile-action btn-secondary" onClick={() => setIsChangePasswordOpen(true)}>
+                      <Lock size={16} />
+                      Change Password
+                    </button>
+                  </>
                 ) : (
                   <button 
                     className="btn-profile-action btn-secondary"
@@ -550,6 +565,12 @@ const UserProfilePage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) 
                 window.location.href = `/user/${updatedUser.username}`;
               }
             }}
+          />
+
+          {/* Change Password Modal */}
+          <ChangePasswordModal
+            isOpen={isChangePasswordOpen}
+            onClose={() => setIsChangePasswordOpen(false)}
           />
         </div>
       </div>

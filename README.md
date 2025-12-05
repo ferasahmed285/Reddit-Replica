@@ -1,107 +1,109 @@
-# Reddit-Replica
+# Reddit Clone
 
-A full-stack Reddit clone with posts, comments, voting, and communities built using modern web technologies.
+A full-stack Reddit clone with communities, posts, comments, voting, real-time chat, notifications, and custom feeds.
 
 🔗 **Live Demo:** [https://reddit-replica-asu.vercel.app/](https://reddit-replica-asu.vercel.app/)
 
+## Features
+
+- **Authentication** - Email/password registration & login, Google OAuth, password reset
+- **Communities** - Create, join, leave, edit, and delete communities
+- **Posts** - Create text/image posts, edit, delete, upvote/downvote
+- **Comments** - Nested comment threads with voting
+- **User Profiles** - Customizable profiles with banners, bios, karma tracking
+- **Real-time Chat** - Direct messaging between users with reply support
+- **Notifications** - Get notified for upvotes, comments, replies, and follows
+- **Custom Feeds** - Create personalized feeds from multiple communities
+- **Search** - Search posts, communities, and users
+- **Dark/Light Mode** - Theme toggle with system preference detection
+
 ## Tech Stack
 
-**Frontend:** React 19, React Router, Axios, Lucide React, Vite  
-**Backend:** Node.js, Express 5, MongoDB, Mongoose, JWT Authentication  
-**Deployment:** Frontend on Vercel, Backend on Railway
+**Frontend:** React 19, React Router, Vite, Lucide React  
+**Backend:** Node.js, Express 5, MongoDB, Mongoose, JWT  
+**Auth:** Local + Google OAuth 2.0  
+**Deployment:** Vercel (frontend), Railway (backend)
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (v18+)
-- MongoDB database (local or MongoDB Atlas)
+- Node.js v18+
+- MongoDB (local or Atlas)
+- Google OAuth credentials (optional, for Google sign-in)
 
 ### Backend Setup
 
-1. Navigate to the server directory:
-   ```bash
-   cd server
-   ```
+```bash
+cd server
+npm install
+```
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+Create `server/.env`:
+```env
+PORT=5000
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_secret_key_here
+NODE_ENV=development
+GOOGLE_CLIENT_ID=your_google_client_id
+FRONTEND_URL=http://localhost:5173
+```
 
-3. Create a `.env` file with the following variables:
-   ```env
-   PORT=5000
-   JWT_SECRET=your_secret_key_here
-   NODE_ENV=development
-   MONGODB_URI=your_mongodb_connection_string
-   ```
-
-4. (Optional) Seed the database:
-   ```bash
-   npm run seed
-   ```
-
-5. Start the server:
-   ```bash
-   npm run dev
-   ```
+Start the server:
+```bash
+npm run dev
+```
 
 ### Frontend Setup
 
-1. Navigate to the client directory:
-   ```bash
-   cd client
-   ```
+```bash
+cd client
+npm install
+```
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+Create `client/.env`:
+```env
+VITE_API_URL=http://localhost:5000/api
+VITE_GOOGLE_CLIENT_ID=your_google_client_id
+```
 
-3. Create a `.env` file:
-   ```env
-   VITE_API_URL=http://localhost:5000/api
-   ```
-
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
+Start the dev server:
+```bash
+npm run dev
+```
 
 ## Deployment
 
 ### Backend (Railway)
 
-1. Create a new project on [Railway](https://railway.app/)
-2. Connect your GitHub repository
-3. Set the root directory to `server`
-4. Add environment variables:
-   - `PORT` (Railway provides this automatically)
-   - `JWT_SECRET`
+1. Create project on [Railway](https://railway.app/)
+2. Connect GitHub repo, set root to `server`
+3. Add environment variables:
    - `MONGODB_URI`
+   - `JWT_SECRET`
    - `NODE_ENV=production`
-5. Railway will automatically deploy on push to main
+   - `GOOGLE_CLIENT_ID`
+   - `FRONTEND_URL` (your Vercel URL)
 
 ### Frontend (Vercel)
 
-1. Create a new project on [Vercel](https://vercel.com/)
-2. Connect your GitHub repository
-3. Set the root directory to `client`
-4. Set the framework preset to Vite
-5. Add environment variable:
-   - `VITE_API_URL` = your Railway backend URL + `/api`
-6. Deploy
+1. Create project on [Vercel](https://vercel.com/)
+2. Connect GitHub repo, set root to `client`
+3. Framework preset: Vite
+4. Add environment variables:
+   - `VITE_API_URL` (Railway URL + `/api`)
+   - `VITE_GOOGLE_CLIENT_ID`
 
-## Available Scripts
+**Important:** Add your Vercel domain to Google OAuth authorized origins.
+
+## Scripts
 
 ### Server
-- `npm start` - Start production server
-- `npm run dev` - Start development server with hot reload
-- `npm run seed` - Seed database with sample data
+- `npm run dev` - Development with hot reload
+- `npm start` - Production server
+- `npm run seed` - Seed sample data
 
 ### Client
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
+- `npm run dev` - Development server
+- `npm run build` - Production build
+- `npm run preview` - Preview build

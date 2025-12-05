@@ -227,3 +227,110 @@
 .dark-mode .edit-profile-form textarea:focus {
   border-color: white;
 }
+
+
+/* Image Mode Tabs */
+.image-mode-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.image-mode-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.image-mode-tab:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.image-mode-tab.active {
+  background: var(--color-blue);
+  border-color: var(--color-blue);
+  color: white;
+}
+
+/* File Upload Area */
+.file-upload-area {
+  position: relative;
+}
+
+.file-input {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.file-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 20px;
+  background: var(--color-bg-secondary);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.file-upload-label:hover {
+  border-color: var(--color-blue);
+  background: var(--color-bg-hover);
+}
+
+.file-upload-label span {
+  font-size: 14px;
+}
+
+.file-hint {
+  font-size: 12px !important;
+  color: var(--color-text-muted);
+}
+
+
+/* Password Input */
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper input {
+  flex: 1;
+  padding-right: 40px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle:hover {
+  color: var(--color-text-primary);
+}

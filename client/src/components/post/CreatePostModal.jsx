@@ -71,7 +71,7 @@ const CreatePostModal = ({ isOpen, onClose, subreddit, onPostCreated }) => {
       if (result.joined) {
         setJoinedCommunities(prev => [...prev, selectedCommunity]);
         setShowJoinPrompt(false);
-        showToast(`Joined r/${selectedCommunity}! 🎉`, 'success');
+        showToast(`Joined r/${selectedCommunity}`, 'success');
         // Now submit the post
         await submitPost();
       }
@@ -93,7 +93,7 @@ const CreatePostModal = ({ isOpen, onClose, subreddit, onPostCreated }) => {
       };
 
       await postsAPI.create(postData);
-      showToast('Post created successfully! 🎉', 'success');
+      showToast('Post created successfully', 'success');
       
       // Reset form
       setTitle('');

@@ -7,282 +7,476 @@ const User = require('../models/User');
 const Community = require('../models/Community');
 const Post = require('../models/Post');
 const Comment = require('../models/Comment');
+const Vote = require('../models/Vote');
 const Notification = require('../models/Notification');
 const UserActivity = require('../models/UserActivity');
+const CustomFeed = require('../models/CustomFeed');
+const Chat = require('../models/Chat');
+
+// Helper to generate random email
+const generateEmail = (username) => {
+  const domains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
+  return `${username}@${domains[Math.floor(Math.random() * domains.length)]}`;
+};
+
+// Helper to get random items from array
+const getRandomItems = (arr, count) => {
+  const shuffled = [...arr].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, Math.min(count, arr.length));
+};
+
+// Helper to get random int
+const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+// Generate colorful icons using UI Avatars API (very reliable)
+const getIcon = (name) => {
+  const colors = ['ff4500', '0079d3', '7193ff', 'ff8717', '94e044', 'ffb000', '46d160', 'ff66ac', 'ea0027', '00a6a5'];
+  const color = colors[name.length % colors.length];
+  return `https://ui-avatars.com/api/?name=${name.substring(0,2).toUpperCase()}&background=${color}&color=fff&size=128&bold=true&format=png`;
+};
+
+// Get banner using picsum.photos (very reliable, no watermarks)
+const getBanner = (seed) => {
+  return `https://picsum.photos/seed/${seed}/1200/300`;
+};
 
 const seedDatabase = async () => {
   try {
-    // Connect to MongoDB
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('Connected to MongoDB');
 
-    // Clear existing data
+    // Clear all data
     console.log('Clearing existing data...');
-    await User.deleteMany({});
-    await Community.deleteMany({});
-    await Post.deleteMany({});
-    await Comment.deleteMany({});
-    await Notification.deleteMany({});
-    await UserActivity.deleteMany({});
+    await Promise.all([
+      User.deleteMany({}),
+      Community.deleteMany({}),
+      Post.deleteMany({}),
+      Comment.deleteMany({}),
+      Vote.deleteMany({}),
+      Notification.deleteMany({}),
+      UserActivity.deleteMany({}),
+      CustomFeed.deleteMany({}),
+      Chat.deleteMany({})
+    ]);
 
     // Create users
     console.log('Creating users...');
     const hashedPassword = await bcrypt.hash('password123', 10);
     
     const usersData = [
-      { username: 'CuriousGuy99', bio: 'Just a curious guy asking questions on the internet.', bannerColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', karma: 12500 },
-      { username: 'CodeNinja', bio: 'Full-stack developer | Open source maintainer | Coffee powered', bannerColor: 'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)', karma: 91700 },
-      { username: 'ChefBoy', bio: 'Home chef | Food lover | Grilling enthusiast', bannerColor: 'linear-gradient(135deg, #ffa500 0%, #ff6347 100%)', karma: 45200 },
-      { username: 'GymRat_22', bio: 'Fitness enthusiast | Gym 6 days a week | Gains over everything', bannerColor: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', karma: 28300 },
-      { username: 'PhotographerX', bio: 'Professional photographer | Travel lover | Capturing moments', bannerColor: 'linear-gradient(135deg, #00b4db 0%, #0083b0 100%)', karma: 89200 },
-      { username: 'MemeLord', bio: 'Professional meme curator | Making the internet laugh since 2018', bannerColor: 'linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%)', karma: 156700 },
-      { username: 'TechGuru2024', bio: 'Tech enthusiast | Gadget reviewer | Always online', bannerColor: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)', karma: 34700 },
-      { username: 'GameMaster', bio: 'Hardcore gamer | Speedrunner | Streaming on weekends', bannerColor: 'linear-gradient(135deg, #4b6cb7 0%, #182848 100%)', karma: 67400 },
-      { username: 'BookWorm', bio: 'Avid reader | Book reviewer | 100+ books a year', bannerColor: 'linear-gradient(135deg, #8b4513 0%, #d2691e 100%)', karma: 42100 },
-      { username: 'ScienceNerd', bio: 'PhD in Physics | Science communicator | Making science fun', bannerColor: 'linear-gradient(135deg, #00ff00 0%, #32cd32 100%)', karma: 78900 },
+      { username: 'techguru', bio: 'Full-stack developer | Open source enthusiast' },
+      { username: 'gamerpro', bio: 'Hardcore gamer | Speedrunner | Streaming weekends' },
+      { username: 'bookworm', bio: 'Avid reader | 100+ books a year | Book reviewer' },
+      { username: 'fitnessfan', bio: 'Gym 6 days a week | Nutrition nerd | Gains over everything' },
+      { username: 'foodlover', bio: 'Home chef | Restaurant explorer | Recipe creator' },
+      { username: 'sciencenerd', bio: 'PhD student | Science communicator | Curious mind' },
+      { username: 'moviebuff', bio: 'Film critic | Cinema enthusiast | Oscar predictor' },
+      { username: 'musicfan', bio: 'Vinyl collector | Concert goer | All genres welcome' },
+      { username: 'photopro', bio: 'Professional photographer | Travel lover | Capturing moments' },
+      { username: 'newsjunkie', bio: 'Staying informed | Political observer | News analyst' },
+      { username: 'petlover', bio: 'Dog dad | Cat mom | Animal rescue volunteer' },
+      { username: 'sportsfan', bio: 'Fantasy league champion | Stats nerd | Game day ready' },
+      { username: 'artlover', bio: 'Museum hopper | Digital artist | Creative soul' },
+      { username: 'traveler', bio: 'Wanderlust | 30 countries and counting | Adventure seeker' },
+      { username: 'coder_jane', bio: 'Software engineer | Python lover | Building cool stuff' },
+      { username: 'chef_mike', bio: 'Professional chef | Culinary school grad | Food is art' },
+      { username: 'yoga_sarah', bio: 'Yoga instructor | Mindfulness advocate | Inner peace' },
+      { username: 'crypto_dan', bio: 'Blockchain developer | DeFi enthusiast | HODL' },
+      { username: 'writer_emma', bio: 'Novelist | Blogger | Words are my superpower' },
+      { username: 'diy_master', bio: 'Woodworker | Home improvement | Making things' },
+    ];
+
+    const bannerColors = [
+      'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)',
+      'linear-gradient(135deg, #ffa500 0%, #ff6347 100%)',
+      'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+      'linear-gradient(135deg, #4b6cb7 0%, #182848 100%)',
+      'linear-gradient(135deg, #f12711 0%, #f5af19 100%)',
+      'linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%)',
+      'linear-gradient(135deg, #00b4db 0%, #0083b0 100%)',
     ];
 
     const users = [];
     for (const userData of usersData) {
       const user = await User.create({
         ...userData,
+        email: generateEmail(userData.username),
         password: hashedPassword,
-        avatar: `https://placehold.co/100/ff4500/white?text=${userData.username.substring(0, 2).toUpperCase()}`,
-        cakeDay: new Date(2020 + Math.floor(Math.random() * 4), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1)
+        bannerColor: bannerColors[Math.floor(Math.random() * bannerColors.length)],
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.username}`,
+        cakeDay: new Date(2020 + randomInt(0, 4), randomInt(0, 11), randomInt(1, 28))
       });
       users.push(user);
-      
-      // Create user activity
       await UserActivity.create({ user: user._id });
     }
     console.log(`   Created ${users.length} users`);
 
+
     // Create communities
     console.log('Creating communities...');
     const communitiesData = [
-      { name: 'askmen', title: 'AskMen', description: "A place to discuss men's lives and opinions.", memberCount: 1250, creatorIndex: 0, bannerColor: '24292e', iconColor: 'orangered', category: 'Q&As & Stories' },
-      { name: 'askwomen', title: 'AskWomen', description: 'A space for women to share their perspectives.', memberCount: 980, creatorIndex: 0, bannerColor: 'pink', iconColor: 'pink', category: 'Q&As & Stories' },
-      { name: 'reactjs', title: 'React.js', description: 'A community for learning and developing with React.', memberCount: 2340, creatorIndex: 1, bannerColor: '61dafb', iconColor: '20232a', category: 'Technology' },
-      { name: 'funny', title: 'Funny', description: "Welcome to r/Funny, Reddit's largest humour depository.", memberCount: 5670, creatorIndex: 5, bannerColor: 'ff4500', iconColor: 'ff4500', category: 'Entertainment' },
-      { name: 'pics', title: 'Pictures', description: 'A place for pictures and photographs.', memberCount: 3450, creatorIndex: 4, bannerColor: 'green', iconColor: 'green', category: 'Entertainment' },
-      { name: 'gaming', title: 'Gaming', description: 'A subreddit for (almost) anything related to games.', memberCount: 4560, creatorIndex: 7, bannerColor: '8b00ff', iconColor: '8b00ff', category: 'Gaming' },
-      { name: 'technology', title: 'Technology', description: 'Subreddit dedicated to the news and discussions about technology.', memberCount: 2890, creatorIndex: 6, bannerColor: '00bfff', iconColor: '00bfff', category: 'Technology' },
-      { name: 'books', title: 'Books', description: 'This is a moderated subreddit for book lovers.', memberCount: 1560, creatorIndex: 8, bannerColor: '8b4513', iconColor: '8b4513', category: 'Entertainment' },
-      { name: 'music', title: 'Music', description: 'The musical community of Reddit.', memberCount: 3210, creatorIndex: 5, bannerColor: 'ff1493', iconColor: 'ff1493', category: 'Entertainment' },
-      { name: 'science', title: 'Science', description: 'This community is a place to share and discuss new scientific research.', memberCount: 2780, creatorIndex: 9, bannerColor: '00ff00', iconColor: '00ff00', category: 'News' },
-      { name: 'fitness', title: 'Fitness', description: 'Discussion of physical fitness/exercise goals.', memberCount: 1890, creatorIndex: 3, bannerColor: 'ff6347', iconColor: 'ff6347', category: 'Sports' },
-      { name: 'food', title: 'Food', description: 'Cooking, restaurants, recipes, food network, foodies!', memberCount: 2340, creatorIndex: 2, bannerColor: 'ffa500', iconColor: 'ffa500', category: 'Entertainment' },
-      { name: 'movies', title: 'Movies', description: 'The goal of /r/Movies is to provide an inclusive place for discussions.', memberCount: 3670, creatorIndex: 7, bannerColor: 'ff0000', iconColor: 'ff0000', category: 'Entertainment' },
-      { name: 'aww', title: 'Aww', description: 'Things that make you go AWW! -- like puppies, bunnies, babies...', memberCount: 4120, creatorIndex: 0, bannerColor: 'ffb6c1', iconColor: 'ffb6c1', category: 'Entertainment' },
+      { name: 'askmen', title: 'AskMen', description: 'A place for men to discuss life, relationships, and everything in between.', category: 'Q&As & Stories' },
+      { name: 'askwomen', title: 'AskWomen', description: 'A space for women to share perspectives and experiences.', category: 'Q&As & Stories' },
+      { name: 'programming', title: 'Programming', description: 'Computer programming news, tekniques, and discussion.', category: 'Technology' },
+      { name: 'gaming', title: 'Gaming', description: 'A subreddit for almost anything related to games.', category: 'Gaming' },
+      { name: 'movies', title: 'Movies', description: 'News and discussion about major motion pictures.', category: 'Entertainment' },
+      { name: 'music', title: 'Music', description: 'The musical community of Reddit.', category: 'Entertainment' },
+      { name: 'science', title: 'Science', description: 'Share and discuss new scientific research.', category: 'News' },
+      { name: 'fitness', title: 'Fitness', description: 'Discussion of physical fitness and exercise goals.', category: 'Sports' },
+      { name: 'food', title: 'Food', description: 'Cooking, restaurants, recipes, and food culture.', category: 'Entertainment' },
+      { name: 'technology', title: 'Technology', description: 'News and discussions about technology.', category: 'Technology' },
+      { name: 'books', title: 'Books', description: 'A community for book lovers and readers.', category: 'Entertainment' },
+      { name: 'aww', title: 'Aww', description: 'Things that make you go AWW! Cute animals and more.', category: 'Entertainment' },
+      { name: 'pics', title: 'Pictures', description: 'A place for pictures and photographs.', category: 'Entertainment' },
+      { name: 'funny', title: 'Funny', description: 'Reddit\'s largest humor community.', category: 'Entertainment' },
+      { name: 'worldnews', title: 'World News', description: 'A place for major news from around the world.', category: 'News' },
     ];
 
     const communities = [];
-    for (const commData of communitiesData) {
-      const creator = users[commData.creatorIndex];
+    for (let i = 0; i < communitiesData.length; i++) {
+      const commData = communitiesData[i];
+      const creator = users[i % users.length];
+      
       const community = await Community.create({
         name: commData.name,
         displayName: `r/${commData.name}`,
         title: commData.title,
         description: commData.description,
-        memberCount: commData.memberCount,
+        category: commData.category,
         creator: creator._id,
         creatorUsername: creator.username,
-        category: commData.category,
-        iconUrl: `https://placehold.co/100/${commData.iconColor}/white?text=${commData.name.substring(0, 2).toUpperCase()}`,
-        bannerUrl: `https://placehold.co/1000x150/${commData.bannerColor}/white?text=${commData.title}+Banner`
+        memberCount: 1, // Will be updated after users join
+        iconUrl: getIcon(commData.name),
+        bannerUrl: getBanner(commData.name) // Uses community name as seed for consistent images
       });
       communities.push(community);
+      
+      // Creator auto-joins their community
+      const activity = await UserActivity.findOne({ user: creator._id });
+      activity.joinedCommunities.push(community._id);
+      await activity.save();
     }
     console.log(`   Created ${communities.length} communities`);
 
+    // Have users randomly join communities
+    console.log('Users joining communities...');
+    
+    // Track member counts properly
+    const memberCounts = new Map();
+    for (const community of communities) {
+      memberCounts.set(community._id.toString(), 1); // Creator already joined
+    }
+    
+    let totalJoins = 0;
+    for (const user of users) {
+      const activity = await UserActivity.findOne({ user: user._id });
+      const alreadyJoined = new Set(activity.joinedCommunities.map(id => id.toString()));
+      
+      const numToJoin = randomInt(3, 10);
+      const communitiesToJoin = getRandomItems(communities, numToJoin);
+      
+      for (const community of communitiesToJoin) {
+        const communityIdStr = community._id.toString();
+        if (!alreadyJoined.has(communityIdStr)) {
+          activity.joinedCommunities.push(community._id);
+          alreadyJoined.add(communityIdStr);
+          memberCounts.set(communityIdStr, memberCounts.get(communityIdStr) + 1);
+          totalJoins++;
+        }
+      }
+      await activity.save();
+    }
+    
+    // Update community member counts to match actual joins
+    for (const community of communities) {
+      community.memberCount = memberCounts.get(community._id.toString());
+      await community.save();
+    }
+    console.log(`   Created ${totalJoins} community memberships`);
+
     // Create posts
     console.log('Creating posts...');
-    const postsData = [
-      { title: 'Men of Reddit, what is the one compliment you received that you still think about?', type: 'text', content: 'I was told I have nice eyebrows 6 years ago by a cashier. I still think about it weekly.', communityName: 'askmen', authorIndex: 0, upvotes: 44, downvotes: 3 },
-      { title: 'How do you balance work and gym?', type: 'text', content: 'I feel like I am always tired after work. Any tips?', communityName: 'askmen', authorIndex: 3, upvotes: 31, downvotes: 5 },
-      { title: 'React 19 is coming. Are we ready?', type: 'text', content: 'The new compiler looks amazing, but I am worried about breaking changes.', communityName: 'reactjs', authorIndex: 1, upvotes: 25, downvotes: 2 },
-      { title: 'My cat trying to understand physics', type: 'image', content: 'https://placehold.co/600x400/orange/white?text=Confused+Cat+Meme', communityName: 'funny', authorIndex: 5, upvotes: 120, downvotes: 8 },
-      { title: 'Sunset in Kyoto, Japan', type: 'image', content: 'https://placehold.co/600x400/purple/white?text=Kyoto+Sunset', communityName: 'pics', authorIndex: 4, upvotes: 220, downvotes: 12 },
-      { title: 'Just finished Elden Ring after 200 hours. What a masterpiece!', type: 'text', content: 'The level design, boss fights, and exploration are unmatched.', communityName: 'gaming', authorIndex: 7, upvotes: 89, downvotes: 7 },
-      { title: 'AI is getting scary good at coding. Should developers be worried?', type: 'text', content: 'I just used GPT-4 to build an entire app in 30 minutes.', communityName: 'technology', authorIndex: 1, upvotes: 156, downvotes: 34 },
-      { title: 'Just finished "Project Hail Mary" and I am blown away', type: 'text', content: 'Andy Weir did it again. This book is even better than The Martian!', communityName: 'books', authorIndex: 8, upvotes: 67, downvotes: 4 },
-      { title: 'New study shows coffee may extend lifespan by 20%', type: 'text', content: 'Finally, some good news for coffee addicts like me!', communityName: 'science', authorIndex: 9, upvotes: 345, downvotes: 23 },
-      { title: 'Hit a 405lb deadlift today! 2 years of training paid off', type: 'text', content: 'Started at 135lbs. Consistency is key!', communityName: 'fitness', authorIndex: 3, upvotes: 56, downvotes: 2 },
-      { title: 'Homemade ramen from scratch - 8 hours of work', type: 'image', content: 'https://placehold.co/600x400/ffa500/white?text=Ramen+Bowl', communityName: 'food', authorIndex: 2, upvotes: 345, downvotes: 15 },
-      { title: 'Dune Part 2 is a masterpiece. Best sci-fi film in decades', type: 'text', content: 'Denis Villeneuve is a genius. The cinematography alone deserves an Oscar.', communityName: 'movies', authorIndex: 7, upvotes: 189, downvotes: 11 },
-      { title: 'My cat learned to high-five!', type: 'image', content: 'https://placehold.co/600x400/ff69b4/white?text=Cat+High+Five', communityName: 'aww', authorIndex: 0, upvotes: 678, downvotes: 21 },
+    const postTemplates = [
+      // AskMen posts
+      { community: 'askmen', title: 'Men of Reddit, what compliment do you still think about?', content: 'A cashier told me I have nice eyes 5 years ago. Still think about it.', type: 'text' },
+      { community: 'askmen', title: 'How do you deal with work stress?', content: 'Looking for healthy coping mechanisms. What works for you?', type: 'text' },
+      { community: 'askmen', title: 'What skill did you learn that changed your life?', content: 'For me it was cooking. Saved money and eat healthier now.', type: 'text' },
+      
+      // AskWomen posts
+      { community: 'askwomen', title: 'What is something you wish more people understood?', content: 'Curious to hear different perspectives on this.', type: 'text' },
+      { community: 'askwomen', title: 'Best self-care routines?', content: 'Looking for ideas to improve my daily routine.', type: 'text' },
+      
+      // Programming posts
+      { community: 'programming', title: 'What programming language should I learn in 2024?', content: 'I know Python basics. Should I learn JavaScript, Go, or Rust next?', type: 'text' },
+      { community: 'programming', title: 'Clean code is overrated - change my mind', content: 'Sometimes working code is better than perfect code. Discuss.', type: 'text' },
+      { community: 'programming', title: 'Just deployed my first production app!', content: 'After 6 months of learning, finally shipped something real. Feels amazing!', type: 'text' },
+      
+      // Gaming posts
+      { community: 'gaming', title: 'What game has the best soundtrack?', content: 'For me it\'s a tie between Hades and Celeste.', type: 'text' },
+      { community: 'gaming', title: 'Finally beat Elden Ring after 150 hours', content: 'What a journey. Malenia took me 50+ tries.', type: 'text' },
+      { community: 'gaming', title: 'My gaming setup', content: 'https://images.unsplash.com/photo-1598550476439-6847785fcea6?w=800', type: 'image' },
+      
+      // Movies posts
+      { community: 'movies', title: 'Dune Part 2 is a masterpiece', content: 'Denis Villeneuve outdid himself. The cinematography is breathtaking.', type: 'text' },
+      { community: 'movies', title: 'What movie can you watch over and over?', content: 'Mine is The Dark Knight. Never gets old.', type: 'text' },
+      
+      // Music posts
+      { community: 'music', title: 'What album changed your life?', content: 'For me it was OK Computer by Radiohead.', type: 'text' },
+      { community: 'music', title: 'My vinyl collection', content: 'https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=800', type: 'image' },
+      
+      // Science posts
+      { community: 'science', title: 'New study shows coffee may extend lifespan', content: 'Finally some good news for coffee addicts!', type: 'text' },
+      { community: 'science', title: 'James Webb telescope captures stunning new image', content: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800', type: 'image' },
+      
+      // Fitness posts
+      { community: 'fitness', title: 'Hit a 405lb deadlift today!', content: 'Started at 135lbs two years ago. Consistency is key!', type: 'text' },
+      { community: 'fitness', title: 'Best exercises for beginners?', content: 'Just started going to the gym. What should I focus on?', type: 'text' },
+      { community: 'fitness', title: 'Home gym setup complete', content: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800', type: 'image' },
+      
+      // Food posts
+      { community: 'food', title: 'Homemade ramen from scratch', content: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800', type: 'image' },
+      { community: 'food', title: 'Best pizza I\'ve ever made', content: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800', type: 'image' },
+      { community: 'food', title: 'What\'s your comfort food?', content: 'Mine is mac and cheese. Simple but perfect.', type: 'text' },
+      
+      // Technology posts
+      { community: 'technology', title: 'AI is changing everything - are we ready?', content: 'The pace of AI development is incredible. What do you think the next 5 years will bring?', type: 'text' },
+      { community: 'technology', title: 'My desk setup for remote work', content: 'https://images.unsplash.com/photo-1593062096033-9a26b09da705?w=800', type: 'image' },
+      
+      // Books posts
+      { community: 'books', title: 'Just finished Project Hail Mary - WOW', content: 'Andy Weir did it again. Even better than The Martian!', type: 'text' },
+      { community: 'books', title: 'What book are you currently reading?', content: 'I\'m halfway through Dune. Finally understanding the hype.', type: 'text' },
+      
+      // Aww posts
+      { community: 'aww', title: 'My cat learned to high-five!', content: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800', type: 'image' },
+      { community: 'aww', title: 'Adopted this good boy today', content: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800', type: 'image' },
+      { community: 'aww', title: 'Baby elephant playing in water', content: 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=800', type: 'image' },
+      
+      // Pics posts
+      { community: 'pics', title: 'Sunset in Santorini', content: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=800', type: 'image' },
+      { community: 'pics', title: 'Northern lights in Iceland', content: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=800', type: 'image' },
+      { community: 'pics', title: 'Cherry blossoms in Japan', content: 'https://images.unsplash.com/photo-1522383225653-ed111181a951?w=800', type: 'image' },
+      
+      // Funny posts
+      { community: 'funny', title: 'My cat judging my life choices', content: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=800', type: 'image' },
+      { community: 'funny', title: 'Monday mood', content: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800', type: 'image' },
+      
+      // World News posts
+      { community: 'worldnews', title: 'Major climate agreement reached at summit', content: 'World leaders commit to ambitious new targets.', type: 'text' },
+      { community: 'worldnews', title: 'Tech companies announce new AI regulations', content: 'Industry-wide standards being developed.', type: 'text' },
     ];
 
-    for (const postData of postsData) {
-      const author = users[postData.authorIndex];
-      const community = communities.find(c => c.name === postData.communityName);
+    const posts = [];
+    for (const template of postTemplates) {
+      const community = communities.find(c => c.name === template.community);
+      const author = users[randomInt(0, users.length - 1)];
       
-      await Post.create({
-        title: postData.title,
-        type: postData.type,
-        content: postData.content,
+      const post = await Post.create({
+        title: template.title,
+        type: template.type,
+        content: template.content,
         author: author._id,
         authorUsername: author.username,
         community: community._id,
         communityName: community.name,
-        upvotes: postData.upvotes,
-        downvotes: postData.downvotes || 0,
-        createdAt: new Date(Date.now() - Math.random() * 86400000 * 7) // Random time in last 7 days
+        upvotes: randomInt(10, 500),
+        downvotes: randomInt(0, 50),
+        createdAt: new Date(Date.now() - randomInt(0, 7) * 86400000 - randomInt(0, 86400000))
       });
+      posts.push(post);
     }
-    console.log(`   Created ${postsData.length} posts`);
+    console.log(`   Created ${posts.length} posts`);
 
-    // Get all posts for comments
-    const allPosts = await Post.find({});
 
     // Create comments
     console.log('Creating comments...');
-    const commentsData = [
-      // Comments for post 0 (Men of Reddit compliment)
-      { postIndex: 0, authorIndex: 1, content: 'A girl told me I smell nice 10 years ago. Still using the same cologne.', upvotes: 234, downvotes: 5 },
-      { postIndex: 0, authorIndex: 3, content: 'Someone said I have a nice smile once. Made my whole year.', upvotes: 156, downvotes: 3 },
-      { postIndex: 0, authorIndex: 5, content: 'My barber said I have good hair. I think about it every haircut.', upvotes: 89, downvotes: 2 },
-      
-      // Comments for post 2 (React 19)
-      { postIndex: 2, authorIndex: 6, content: 'The new compiler is going to be a game changer for performance!', upvotes: 45, downvotes: 2 },
-      { postIndex: 2, authorIndex: 0, content: 'I hope they maintain backward compatibility. Migration fatigue is real.', upvotes: 78, downvotes: 8 },
-      { postIndex: 2, authorIndex: 9, content: 'Server components are the future. Excited to see how this evolves.', upvotes: 34, downvotes: 1 },
-      
-      // Comments for post 3 (Cat physics)
-      { postIndex: 3, authorIndex: 0, content: 'Cats are liquid, they defy physics by nature 😂', upvotes: 567, downvotes: 12 },
-      { postIndex: 3, authorIndex: 2, content: 'If I fits, I sits - the only physics law cats follow', upvotes: 423, downvotes: 8 },
-      
-      // Comments for post 5 (Elden Ring)
-      { postIndex: 5, authorIndex: 1, content: 'Malenia took me 50+ tries. Worth every death.', upvotes: 123, downvotes: 4 },
-      { postIndex: 5, authorIndex: 5, content: 'The open world design is incredible. So much to discover!', upvotes: 89, downvotes: 2 },
-      { postIndex: 5, authorIndex: 9, content: 'FromSoftware really outdid themselves with this one.', upvotes: 67, downvotes: 1 },
-      
-      // Comments for post 6 (AI coding)
-      { postIndex: 6, authorIndex: 8, content: 'AI is a tool, not a replacement. Good developers will adapt.', upvotes: 234, downvotes: 15 },
-      { postIndex: 6, authorIndex: 3, content: 'The real skill is knowing what to ask and how to verify the output.', upvotes: 189, downvotes: 7 },
-      { postIndex: 6, authorIndex: 0, content: 'Junior devs should still learn fundamentals. AI can\'t replace understanding.', upvotes: 156, downvotes: 12 },
-      
-      // Comments for post 8 (Coffee study)
-      { postIndex: 8, authorIndex: 2, content: 'Finally, a study that validates my 5 cups a day habit!', upvotes: 234, downvotes: 23 },
-      { postIndex: 8, authorIndex: 5, content: 'Correlation vs causation though... coffee drinkers might just be more active.', upvotes: 178, downvotes: 8 },
-      
-      // Comments for post 9 (Deadlift)
-      { postIndex: 9, authorIndex: 1, content: 'Congrats! That\'s a huge milestone. What program did you follow?', upvotes: 34, downvotes: 0 },
-      { postIndex: 9, authorIndex: 7, content: 'Form check? 405 is no joke, want to make sure you\'re staying safe!', upvotes: 28, downvotes: 1 },
-      
-      // Comments for post 11 (Dune)
-      { postIndex: 11, authorIndex: 4, content: 'The sandworm scenes were absolutely breathtaking on IMAX.', upvotes: 145, downvotes: 5 },
-      { postIndex: 11, authorIndex: 8, content: 'Hans Zimmer\'s score elevated every scene. Masterful work.', upvotes: 123, downvotes: 3 },
-      { postIndex: 11, authorIndex: 2, content: 'Timothée Chalamet really grew into the role of Paul.', upvotes: 98, downvotes: 12 },
-      
-      // Comments for post 12 (Cat high-five)
-      { postIndex: 12, authorIndex: 5, content: 'This is the content I\'m here for! 🐱✋', upvotes: 345, downvotes: 4 },
-      { postIndex: 12, authorIndex: 6, content: 'How long did it take to train? My cat just ignores me lol', upvotes: 234, downvotes: 2 },
+    const commentTemplates = [
+      'This is so true!',
+      'Great post, thanks for sharing.',
+      'I completely agree with this.',
+      'Interesting perspective, never thought of it that way.',
+      'Can you elaborate more on this?',
+      'This made my day!',
+      'Saving this for later.',
+      'Underrated comment right here.',
+      'This is the way.',
+      'Take my upvote!',
+      'Came here to say this.',
+      'Well said!',
+      'This deserves more attention.',
+      'Facts.',
+      'I had a similar experience.',
+      'Thanks for the info!',
+      'This is helpful.',
+      'Bookmarking this thread.',
+      'Quality content right here.',
+      'This community is the best.',
     ];
 
-    const createdComments = [];
-    for (const commentData of commentsData) {
-      const post = allPosts[commentData.postIndex];
-      const author = users[commentData.authorIndex];
-      
-      const comment = await Comment.create({
-        content: commentData.content,
-        post: post._id,
-        author: author._id,
-        authorUsername: author.username,
-        upvotes: commentData.upvotes,
-        downvotes: commentData.downvotes,
-        createdAt: new Date(Date.now() - Math.random() * 86400000 * 5)
-      });
-      createdComments.push(comment);
-
-      // Update post comment count
-      post.commentCount++;
+    const comments = [];
+    for (const post of posts) {
+      const numComments = randomInt(2, 8);
+      for (let i = 0; i < numComments; i++) {
+        const author = users[randomInt(0, users.length - 1)];
+        const comment = await Comment.create({
+          content: commentTemplates[randomInt(0, commentTemplates.length - 1)],
+          post: post._id,
+          author: author._id,
+          authorUsername: author.username,
+          upvotes: randomInt(1, 100),
+          downvotes: randomInt(0, 10),
+          createdAt: new Date(post.createdAt.getTime() + randomInt(1, 24) * 3600000)
+        });
+        comments.push(comment);
+        post.commentCount++;
+      }
       await post.save();
     }
-    console.log(`   Created ${commentsData.length} comments`);
+    console.log(`   Created ${comments.length} comments`);
 
-    // Auto-join users to communities where they have posts or comments
-    console.log('Auto-joining users to communities...');
-    
-    // Track which users should be joined to which communities
-    const userCommunityMap = new Map(); // userId -> Set of communityIds
-    
-    // Add post authors to their communities
-    for (const postData of postsData) {
-      const author = users[postData.authorIndex];
-      const community = communities.find(c => c.name === postData.communityName);
-      if (!userCommunityMap.has(author._id.toString())) {
-        userCommunityMap.set(author._id.toString(), new Set());
-      }
-      userCommunityMap.get(author._id.toString()).add(community._id.toString());
-    }
-    
-    // Add comment authors to their communities
-    for (const commentData of commentsData) {
-      const author = users[commentData.authorIndex];
-      const post = allPosts[commentData.postIndex];
-      const community = communities.find(c => c._id.toString() === post.community.toString());
-      if (community) {
-        if (!userCommunityMap.has(author._id.toString())) {
-          userCommunityMap.set(author._id.toString(), new Set());
+    // Create some nested replies
+    console.log('Creating reply comments...');
+    let replyCount = 0;
+    for (const comment of comments.slice(0, 30)) {
+      if (Math.random() > 0.5) {
+        const author = users[randomInt(0, users.length - 1)];
+        await Comment.create({
+          content: commentTemplates[randomInt(0, commentTemplates.length - 1)],
+          post: comment.post,
+          author: author._id,
+          authorUsername: author.username,
+          parentComment: comment._id,
+          depth: 1,
+          upvotes: randomInt(1, 50),
+          downvotes: randomInt(0, 5),
+          createdAt: new Date(comment.createdAt.getTime() + randomInt(1, 12) * 3600000)
+        });
+        replyCount++;
+        
+        // Update post comment count
+        const post = posts.find(p => p._id.toString() === comment.post.toString());
+        if (post) {
+          post.commentCount++;
+          await post.save();
         }
-        userCommunityMap.get(author._id.toString()).add(community._id.toString());
       }
     }
-    
-    // Also add community creators to their communities
-    for (const commData of communitiesData) {
-      const creator = users[commData.creatorIndex];
-      const community = communities.find(c => c.name === commData.name);
-      if (!userCommunityMap.has(creator._id.toString())) {
-        userCommunityMap.set(creator._id.toString(), new Set());
-      }
-      userCommunityMap.get(creator._id.toString()).add(community._id.toString());
-    }
-    
-    // Update UserActivity for each user
-    let joinCount = 0;
-    for (const [userId, communityIds] of userCommunityMap) {
-      const activity = await UserActivity.findOne({ user: userId });
-      if (activity) {
-        for (const communityId of communityIds) {
-          if (!activity.joinedCommunities.includes(communityId)) {
-            activity.joinedCommunities.push(communityId);
-            joinCount++;
-          }
-        }
-        await activity.save();
-      }
-    }
-    console.log(`   Created ${joinCount} community memberships`);
+    console.log(`   Created ${replyCount} reply comments`);
 
-    // Create some sample notifications for CodeNinja (user index 1)
+    // Create votes
+    console.log('Creating votes...');
+    let voteCount = 0;
+    for (const post of posts) {
+      const numVoters = randomInt(5, 15);
+      const voters = getRandomItems(users, numVoters);
+      for (const voter of voters) {
+        if (voter._id.toString() !== post.author.toString()) {
+          await Vote.create({
+            user: voter._id,
+            target: post._id,
+            targetType: 'post',
+            voteType: Math.random() > 0.2 ? 1 : -1
+          });
+          voteCount++;
+        }
+      }
+    }
+    console.log(`   Created ${voteCount} votes`);
+
+    // Create notifications for first user
     console.log('Creating notifications...');
-    const codeNinja = users[1];
-    const notificationsData = [
-      { type: 'upvote', message: 'Your post "React 19 is coming" received 25 upvotes', link: `/post/${allPosts[2]._id}`, fromIndex: 0 },
-      { type: 'comment', message: 'CuriousGuy99 commented on your post', link: `/post/${allPosts[2]._id}`, fromIndex: 0 },
-      { type: 'reply', message: 'TechGuru2024 replied to your comment', link: `/post/${allPosts[6]._id}`, fromIndex: 6 },
-      { type: 'follow', message: 'GameMaster started following you', link: '/user/GameMaster', fromIndex: 7 },
-    ];
-
-    for (const notifData of notificationsData) {
+    const firstUser = users[0];
+    const notificationTypes = ['upvote', 'comment', 'reply', 'follow'];
+    
+    for (let i = 0; i < 10; i++) {
+      const fromUser = users[randomInt(1, users.length - 1)];
+      const type = notificationTypes[randomInt(0, notificationTypes.length - 1)];
+      const post = posts[randomInt(0, posts.length - 1)];
+      
+      let message, link;
+      switch (type) {
+        case 'upvote':
+          message = `${fromUser.username} upvoted your post`;
+          link = `/post/${post._id}`;
+          break;
+        case 'comment':
+          message = `${fromUser.username} commented on your post`;
+          link = `/post/${post._id}`;
+          break;
+        case 'reply':
+          message = `${fromUser.username} replied to your comment`;
+          link = `/post/${post._id}`;
+          break;
+        case 'follow':
+          message = `${fromUser.username} started following you`;
+          link = `/user/${fromUser.username}`;
+          break;
+      }
+      
       await Notification.create({
-        user: codeNinja._id,
-        type: notifData.type,
-        message: notifData.message,
-        link: notifData.link,
-        fromUser: users[notifData.fromIndex]._id,
-        fromUsername: users[notifData.fromIndex].username,
+        user: firstUser._id,
+        type,
+        message,
+        link,
+        fromUser: fromUser._id,
+        fromUsername: fromUser.username,
         read: Math.random() > 0.5,
-        createdAt: new Date(Date.now() - Math.random() * 86400000 * 3)
+        createdAt: new Date(Date.now() - randomInt(0, 3) * 86400000)
       });
     }
-    console.log(`   Created ${notificationsData.length} notifications`);
+    console.log('   Created 10 notifications');
 
-    console.log('\n Database seeded successfully!');
-    
+    // Create a custom feed for first user
+    console.log('Creating custom feeds...');
+    const customFeed = await CustomFeed.create({
+      name: 'Tech & Gaming',
+      description: 'My favorite tech and gaming communities',
+      creator: firstUser._id,
+      creatorUsername: firstUser.username,
+      communities: [
+        communities.find(c => c.name === 'programming')._id,
+        communities.find(c => c.name === 'gaming')._id,
+        communities.find(c => c.name === 'technology')._id
+      ],
+      isFavorite: true
+    });
+    console.log('   Created 1 custom feed');
+
+    // Create a sample chat
+    console.log('Creating sample chat...');
+    const user1 = users[0];
+    const user2 = users[1];
+    await Chat.create({
+      participants: [user1._id, user2._id],
+      participantUsernames: [user1.username, user2.username],
+      messages: [
+        { sender: user1._id, senderUsername: user1.username, content: 'Hey! How are you?', read: true },
+        { sender: user2._id, senderUsername: user2.username, content: 'Good! Just checking out this Reddit clone.', read: true },
+        { sender: user1._id, senderUsername: user1.username, content: 'Pretty cool right?', read: false }
+      ],
+      lastMessage: {
+        content: 'Pretty cool right?',
+        senderUsername: user1.username,
+        createdAt: new Date()
+      }
+    });
+    console.log('   Created 1 sample chat');
+
+    // Summary
+    console.log('\n========================================');
+    console.log('Database seeded successfully!');
+    console.log('========================================');
+    console.log(`Users: ${users.length}`);
+    console.log(`Communities: ${communities.length}`);
+    console.log(`Posts: ${posts.length}`);
+    console.log(`Comments: ${comments.length + replyCount}`);
+    console.log(`Votes: ${voteCount}`);
+    console.log('========================================');
+    console.log('\nTest login credentials:');
+    console.log('Username: techguru');
+    console.log('Password: password123');
+    console.log('========================================\n');
+
     process.exit(0);
   } catch (error) {
     console.error('Seed error:', error);

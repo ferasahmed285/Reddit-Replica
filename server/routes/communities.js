@@ -9,11 +9,45 @@ const router = express.Router();
 // Simple in-memory cache for communities list
 let communitiesCache = null;
 let cacheTimestamp = 0;
-const CACHE_DURATION = 60 * 1000; // 1 minute cache
+const CACHE_DURATION = 15 * 1000; // 15 seconds cache
 
 const invalidateCommunitiesCache = () => {
   communitiesCache = null;
   cacheTimestamp = 0;
+};
+
+// Helper to track community visit in background (non-blocking)
+const trackCommunityVisit = (req, communityId) => {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader) return;
+  
+  setImmediate(async () => {
+    try {
+      const token = authHeader.split(' ')[1];
+      const jwt = require('jsonwebtoken');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      await UserActivity.findOneAndUpdate(
+        { user: decoded.id },
+        { $pull: { recentCommunities: communityId } }
+      );
+      await UserActivity.findOneAndUpdate(
+        { user: decoded.id },
+        { 
+          $push: { 
+            recentCommunities: { 
+              $each: [communityId], 
+              $position: 0, 
+              $slice: 5 
+            } 
+          } 
+        },
+        { upsert: true }
+      );
+    } catch (err) {
+      // Ignore auth errors
+    }
+  });
 };
 
 // GET /api/communities/user/recent - Get recent communities (protected)
@@ -83,23 +117,46 @@ router.get('/', async (req, res) => {
       .limit(100)
       .lean(); // Use lean for faster read-only queries
     
+    // Format communities with id field for routing
+    const formattedCommunities = communities.map(c => ({
+      ...c,
+      id: c.name, // Use name as id for routing (matches other endpoints)
+      members: c.memberCount >= 1000000 
+        ? `${(c.memberCount / 1000000).toFixed(1)}M`
+        : c.memberCount >= 1000 
+          ? `${(c.memberCount / 1000).toFixed(0)}k`
+          : String(c.memberCount)
+    }));
+    
     // Update cache
-    communitiesCache = communities;
+    communitiesCache = formattedCommunities;
     cacheTimestamp = now;
     
-    res.status(200).json(communities);
+    res.status(200).json(formattedCommunities);
   } catch (error) {
     console.error('Get communities error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
+// Cache for individual communities
+const communityCache = new Map();
+const COMMUNITY_CACHE_DURATION = 30 * 1000; // 30 seconds
+
 // GET /api/communities/:id - Get single community
 router.get('/:id', async (req, res) => {
   try {
-    const community = await Community.findOne({ 
-      name: req.params.id.toLowerCase() 
-    }).lean();
+    const communityName = req.params.id.toLowerCase();
+    
+    // Check cache first
+    const cached = communityCache.get(communityName);
+    if (cached && (Date.now() - cached.timestamp) < COMMUNITY_CACHE_DURATION) {
+      // Track visit in background if authenticated
+      trackCommunityVisit(req, cached.data._id);
+      return res.status(200).json(cached.data);
+    }
+    
+    const community = await Community.findOne({ name: communityName }).lean();
     
     if (!community) {
       return res.status(404).json({ message: 'Community not found' });
@@ -118,41 +175,12 @@ router.get('/:id', async (req, res) => {
       created: new Date(community.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       creatorId: community.creator?.toString()
     };
+    
+    // Cache the result
+    communityCache.set(communityName, { data: formattedCommunity, timestamp: Date.now() });
 
-    // Track visit if user is authenticated (non-blocking)
-    const authHeader = req.headers['authorization'];
-    if (authHeader) {
-      // Run in background, don't wait for it
-      setImmediate(async () => {
-        try {
-          const token = authHeader.split(' ')[1];
-          const jwt = require('jsonwebtoken');
-          const decoded = jwt.verify(token, process.env.JWT_SECRET);
-          
-          await UserActivity.findOneAndUpdate(
-            { user: decoded.id },
-            { 
-              $pull: { recentCommunities: community._id },
-            }
-          );
-          await UserActivity.findOneAndUpdate(
-            { user: decoded.id },
-            { 
-              $push: { 
-                recentCommunities: { 
-                  $each: [community._id], 
-                  $position: 0, 
-                  $slice: 5 
-                } 
-              } 
-            },
-            { upsert: true }
-          );
-        } catch (err) {
-          // Ignore auth errors
-        }
-      });
-    }
+    // Track visit in background (non-blocking)
+    trackCommunityVisit(req, community._id);
 
     res.status(200).json(formattedCommunity);
   } catch (error) {

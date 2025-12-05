@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { useSidebar } from '../../context/SidebarContext';
 import { communitiesAPI } from '../../services/api';
 import EditCommunityModal from './EditCommunityModal';
 import ConfirmModal from '../common/ConfirmModal';
@@ -19,6 +20,7 @@ const CommunityHeader = ({
 }) => {
   const { currentUser } = useAuth();
   const { showToast } = useToast();
+  const { refreshSidebarData } = useSidebar();
   const navigate = useNavigate();
   const [joined, setJoined] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -31,7 +33,7 @@ const CommunityHeader = ({
      currentUser.id === communityData.creatorId ||
      currentUser._id === communityData.creator);
 
-  // Check if user has joined this community
+  // Check if user has joined this community - use cached version to avoid extra API calls
   useEffect(() => {
     const checkJoinStatus = async () => {
       if (!currentUser) {
@@ -39,7 +41,8 @@ const CommunityHeader = ({
         return;
       }
       try {
-        const joinedCommunities = await communitiesAPI.getJoined();
+        // Use cached version to avoid unnecessary API calls
+        const joinedCommunities = await communitiesAPI.getJoinedCached();
         const isJoined = joinedCommunities.some(c => 
           c.name === communityId || c.name === name
         );
@@ -62,9 +65,11 @@ const CommunityHeader = ({
       const result = await communitiesAPI.join(communityId);
       setJoined(result.joined);
       showToast(
-        result.joined ? `Joined r/${name}! 🎉` : `Left r/${name}`,
+        result.joined ? `Joined r/${name}` : `Left r/${name}`,
         'success'
       );
+      // Refresh sidebar to show updated communities
+      refreshSidebarData();
       // Update community data if callback provided
       if (onCommunityUpdated && result.community) {
         onCommunityUpdated(result.community);

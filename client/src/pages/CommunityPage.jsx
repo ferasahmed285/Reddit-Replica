@@ -28,32 +28,13 @@ const CommunityPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =>
   
   usePageTitle(communityData ? `r/${communityData.name}` : `r/${subreddit}`);
 
+  // Fetch community data when subreddit changes (not when user changes)
   useEffect(() => {
     const fetchCommunity = async () => {
       try {
         setLoading(true);
-        
-        // Fetch community data and joined communities in parallel
-        // Use cached version to avoid unnecessary API calls
-        const fetchPromises = [communitiesAPI.getById(subreddit)];
-        if (currentUser) {
-          fetchPromises.push(communitiesAPI.getJoinedCached().catch(() => []));
-        }
-        
-        const results = await Promise.all(fetchPromises);
-        const [data, joinedCommunities] = results;
-        
+        const data = await communitiesAPI.getById(subreddit);
         setCommunityData(data);
-        
-        // Check if user has joined this community
-        if (currentUser && joinedCommunities) {
-          const isJoined = joinedCommunities.some(c => 
-            c.name === subreddit || c.name === data.name
-          );
-          setHasJoined(isJoined);
-        } else {
-          setHasJoined(false);
-        }
       } catch (error) {
         console.error('Error fetching community:', error);
         setCommunityData(null);
@@ -62,6 +43,24 @@ const CommunityPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =>
       }
     };
     fetchCommunity();
+  }, [subreddit]);
+
+  // Check join status separately (doesn't block page load)
+  useEffect(() => {
+    const checkJoinStatus = async () => {
+      if (!currentUser) {
+        setHasJoined(false);
+        return;
+      }
+      try {
+        const joinedCommunities = await communitiesAPI.getJoinedCached();
+        const isJoined = joinedCommunities.some(c => c.name === subreddit);
+        setHasJoined(isJoined);
+      } catch {
+        setHasJoined(false);
+      }
+    };
+    checkJoinStatus();
   }, [subreddit, currentUser]);
 
   const handleCreatePostClick = () => {
@@ -87,7 +86,7 @@ const CommunityPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar }) =>
         setHasJoined(true);
         setIsJoinPromptOpen(false);
         setIsCreatePostOpen(true);
-        showToast(`Joined r/${subreddit}! 🎉`, 'success');
+        showToast(`Joined r/${subreddit}`, 'success');
       }
     } catch (error) {
       console.error('Error joining community:', error);

@@ -40,7 +40,6 @@ userActivitySchema.statics.getOrCreate = async function(userId) {
   return activity;
 };
 
-// Index for faster user lookups (user is already unique, but explicit index helps)
-userActivitySchema.index({ user: 1 });
+// Note: user field already has an index from unique: true
 
 module.exports = mongoose.model('UserActivity', userActivitySchema);

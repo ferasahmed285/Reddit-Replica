@@ -115,7 +115,7 @@ const Post = ({ post, onAuthRequired, onVoteUpdate, onPostDeleted, onPostUpdated
       const result = await communitiesAPI.join(post.subreddit);
       setJoined(result.joined);
       showToast(
-        result.joined ? `Joined r/${post.subreddit}! 🎉` : `Left r/${post.subreddit}`,
+        result.joined ? `Joined r/${post.subreddit}` : `Left r/${post.subreddit}`,
         'success'
       );
     } catch (error) {

@@ -23,13 +23,19 @@ const AllCommunitiesPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar 
     const fetchData = async () => {
       try {
         setLoading(true);
-        const allCommunities = await communitiesAPI.getAll();
+        
+        // Fetch all communities and joined communities in parallel
+        const fetchPromises = [communitiesAPI.getAll()];
+        if (currentUser) {
+          fetchPromises.push(communitiesAPI.getJoinedCached().catch(() => []));
+        }
+        
+        const [allCommunities, joined] = await Promise.all(fetchPromises);
         setCommunities(allCommunities);
         setFilteredCommunities(allCommunities);
 
-        if (currentUser) {
-          const joined = await communitiesAPI.getJoined();
-          setJoinedIds(new Set(joined.map(c => c.id)));
+        if (currentUser && joined) {
+          setJoinedIds(new Set(joined.map(c => c.name)));
         }
       } catch (error) {
         console.error('Error fetching communities:', error);
@@ -54,7 +60,7 @@ const AllCommunitiesPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar 
     }
   }, [searchQuery, communities]);
 
-  const handleJoinToggle = async (e, communityId, communityName) => {
+  const handleJoinToggle = async (e, communityName) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -64,16 +70,18 @@ const AllCommunitiesPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar 
     }
 
     try {
-      setJoiningId(communityId);
-      const result = await communitiesAPI.join(communityId);
+      setJoiningId(communityName);
+      const result = await communitiesAPI.join(communityName);
+      // Clear cache so sidebar updates
+      communitiesAPI.clearJoinedCache();
       
       if (result.joined) {
-        setJoinedIds(prev => new Set([...prev, communityId]));
-        showToast(`Joined r/${communityName}! 🎉`, 'success');
+        setJoinedIds(prev => new Set([...prev, communityName]));
+        showToast(`Joined r/${communityName}`, 'success');
       } else {
         setJoinedIds(prev => {
           const newSet = new Set(prev);
-          newSet.delete(communityId);
+          newSet.delete(communityName);
           return newSet;
         });
         showToast(`Left r/${communityName}`, 'success');
@@ -121,8 +129,8 @@ const AllCommunitiesPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar 
           ) : (
             <div className="communities-grid">
               {filteredCommunities.map((community) => (
-                <div key={community.id} className="community-card">
-                  <Link to={`/r/${community.id}`} className="community-card-link">
+                <div key={community.id || community.name} className="community-card">
+                  <Link to={`/r/${community.name}`} className="community-card-link">
                     <div 
                       className="community-banner" 
                       style={{ backgroundImage: `url(${community.bannerUrl})` }}
@@ -142,11 +150,11 @@ const AllCommunitiesPage = ({ onAuthAction, isSidebarCollapsed, onToggleSidebar 
                     </div>
                   </Link>
                   <button 
-                    className={`btn-join-card ${joinedIds.has(community.id) ? 'joined' : ''}`}
-                    onClick={(e) => handleJoinToggle(e, community.id, community.name)}
-                    disabled={joiningId === community.id}
+                    className={`btn-join-card ${joinedIds.has(community.name) ? 'joined' : ''}`}
+                    onClick={(e) => handleJoinToggle(e, community.name)}
+                    disabled={joiningId === community.name}
                   >
-                    {joiningId === community.id ? '...' : joinedIds.has(community.id) ? 'Joined' : 'Join'}
+                    {joiningId === community.name ? '...' : joinedIds.has(community.name) ? 'Joined' : 'Join'}
                   </button>
                 </div>
               ))}

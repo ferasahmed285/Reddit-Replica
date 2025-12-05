@@ -27,7 +27,7 @@ const EditPostModal = ({ isOpen, onClose, post, onPostUpdated }) => {
         content: content.trim(),
       });
       
-      showToast('Post updated successfully! ✏️', 'success');
+      showToast('Post updated successfully', 'success');
       onPostUpdated(updatedPost);
       onClose();
     } catch (error) {

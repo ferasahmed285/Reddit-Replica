@@ -1,5 +1,5 @@
 const express = require('express');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, clearUserCache } = require('../middleware/auth');
 const User = require('../models/User');
 const UserActivity = require('../models/UserActivity');
 const Post = require('../models/Post');
@@ -37,13 +37,13 @@ router.get('/search', async (req, res) => {
   }
 });
 
-// PUT /api/users/profile - Update own profile (protected) - MUST BE BEFORE /:username
-router.put('/profile', authenticateToken, async (req, res) => {
+// PUT /api/users/change-password - Change password (protected)
+router.put('/change-password', authenticateToken, async (req, res) => {
   try {
-    const { username, bio, bannerColor, avatar } = req.body;
+    const { email, oldPassword, newPassword } = req.body;
 
-    if (username && username.trim().length < 3) {
-      return res.status(400).json({ message: 'Username must be at least 3 characters' });
+    if (!email || !oldPassword || !newPassword) {
+      return res.status(400).json({ message: 'Email, current password, and new password are required' });
     }
 
     const user = await User.findById(req.user.id);
@@ -51,17 +51,66 @@ router.put('/profile', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const oldUsername = user.username;
+    // Verify email matches
+    if (email.trim().toLowerCase() !== user.email.toLowerCase()) {
+      return res.status(400).json({ message: 'Email does not match your account' });
+    }
+
+    // Verify old password
+    const isMatch = await user.comparePassword(oldPassword);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Current password is incorrect' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters' });
+    }
+
+    user.password = newPassword; // Will be hashed by pre-save hook
+    await user.save();
+
+    res.status(200).json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// PUT /api/users/profile - Update own profile (protected) - MUST BE BEFORE /:username
+router.put('/profile', authenticateToken, async (req, res) => {
+  try {
+    const { username, bio, bannerColor, bannerUrl } = req.body;
+
+    if (username) {
+      const trimmedUsername = username.trim();
+      if (trimmedUsername.length < 3) {
+        return res.status(400).json({ message: 'Username must be at least 3 characters' });
+      }
+      if (trimmedUsername.length > 20) {
+        return res.status(400).json({ message: 'Username must be at most 20 characters' });
+      }
+      if (!/^[a-z0-9_]+$/.test(trimmedUsername)) {
+        return res.status(400).json({ message: 'Username can only contain lowercase letters, numbers, and underscores (no spaces or capitals)' });
+      }
+    }
+
+    // First get the user to check current values
+    const existingUser = await User.findById(req.user.id);
+    if (!existingUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const oldUsername = existingUser.username;
     const newUsername = username ? username.trim() : oldUsername;
 
     // Check if username is taken (only if changing)
     if (username && newUsername.toLowerCase() !== oldUsername.toLowerCase()) {
-      const existingUser = await User.findOne({ 
+      const userWithSameName = await User.findOne({ 
         username: { $regex: new RegExp(`^${escapeRegex(newUsername)}$`, 'i') },
         _id: { $ne: req.user.id }
       }).lean();
       
-      if (existingUser) {
+      if (userWithSameName) {
         return res.status(409).json({ message: 'Username already taken' });
       }
 
@@ -87,19 +136,31 @@ router.put('/profile', authenticateToken, async (req, res) => {
         )
       ]);
 
-      user.username = newUsername;
     }
 
-    if (bio !== undefined) user.bio = bio.trim();
-    if (bannerColor) user.bannerColor = bannerColor;
-    if (avatar) user.avatar = avatar.trim();
+    // Build update object - only include fields that are being changed
+    const updateFields = {};
+    if (username && newUsername !== oldUsername) {
+      updateFields.username = newUsername;
+    }
+    if (bio !== undefined) updateFields.bio = bio.trim();
+    if (bannerColor !== undefined) updateFields.bannerColor = bannerColor;
+    if (bannerUrl !== undefined) updateFields.bannerUrl = bannerUrl;
 
-    await user.save();
+    // Use findByIdAndUpdate to avoid full document validation
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: updateFields },
+      { new: true, runValidators: false }
+    );
+    
+    // Clear user cache after profile update
+    clearUserCache(req.user.id);
 
-    res.status(200).json(user.toJSON());
+    res.status(200).json(updatedUser.toJSON());
   } catch (error) {
-    console.error('Update profile error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Update profile error:', error.message, error.stack);
+    res.status(500).json({ message: error.message || 'Server error' });
   }
 });
 

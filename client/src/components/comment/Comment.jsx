@@ -159,7 +159,7 @@ const Comment = ({ comment, onAuthRequired, onReplyAdded, onCommentUpdated, onCo
       const updatedComment = await commentsAPI.update(comment.id, editText.trim());
       setLocalContent(updatedComment.content);
       setIsEditing(false);
-      showToast('Comment updated! ✏️', 'success');
+      showToast('Comment updated', 'success');
       if (onCommentUpdated) {
         onCommentUpdated(comment.id, updatedComment);
       }

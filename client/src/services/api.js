@@ -2,8 +2,20 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const getAuthToken = () => localStorage.getItem('authToken');
 
+// Request deduplication - prevents multiple simultaneous calls to the same endpoint
+const pendingRequests = new Map();
+
 const apiRequest = async (endpoint, options = {}) => {
   const token = getAuthToken();
+  const method = options.method || 'GET';
+  
+  // Only deduplicate GET requests
+  const requestKey = method === 'GET' ? `${method}:${endpoint}:${token || 'anon'}` : null;
+  
+  // If there's already a pending request for this endpoint, return that promise
+  if (requestKey && pendingRequests.has(requestKey)) {
+    return pendingRequests.get(requestKey);
+  }
   
   const config = {
     ...options,
@@ -14,14 +26,30 @@ const apiRequest = async (endpoint, options = {}) => {
     },
   };
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-  const data = await response.json();
+  const requestPromise = (async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+      const data = await response.json();
 
-  if (!response.ok) {
-    throw new Error(data.message || 'Request failed');
+      if (!response.ok) {
+        throw new Error(data.message || 'Request failed');
+      }
+
+      return data;
+    } finally {
+      // Clean up pending request after completion
+      if (requestKey) {
+        pendingRequests.delete(requestKey);
+      }
+    }
+  })();
+
+  // Store the promise for deduplication
+  if (requestKey) {
+    pendingRequests.set(requestKey, requestPromise);
   }
 
-  return data;
+  return requestPromise;
 };
 
 // Posts API
@@ -95,12 +123,12 @@ export const commentsAPI = {
 // Cache for joined communities
 let joinedCommunitiesCache = null;
 let joinedCacheTimestamp = 0;
-const JOINED_CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
+const JOINED_CACHE_DURATION = 30 * 1000; // 30 seconds
 
 // Cache for all communities (used by multiple components)
 let allCommunitiesCache = null;
 let allCommunitiesCacheTimestamp = 0;
-const ALL_COMMUNITIES_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const ALL_COMMUNITIES_CACHE_DURATION = 30 * 1000; // 30 seconds
 
 // Communities API
 export const communitiesAPI = {
@@ -204,7 +232,7 @@ export const notificationsAPI = {
 // Cache for custom feeds
 let customFeedsCache = null;
 let customFeedsCacheTimestamp = 0;
-const CUSTOM_FEEDS_CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
+const CUSTOM_FEEDS_CACHE_DURATION = 30 * 1000; // 30 seconds
 
 // Custom Feeds API
 export const customFeedsAPI = {
