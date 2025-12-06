@@ -153,8 +153,8 @@ const EditProfileModal = ({ isOpen, onClose, user, onProfileUpdated }) => {
         bannerUrl: bannerMode !== 'color' ? bannerUrl : '',
       };
       
-      // Only include avatar if it was changed
-      if (avatarMode !== 'current') {
+      // Only include avatar if it was changed (url or upload mode)
+      if (avatarMode === 'url' || avatarMode === 'upload') {
         requestBody.avatar = avatar;
       }
 
@@ -219,20 +219,66 @@ const EditProfileModal = ({ isOpen, onClose, user, onProfileUpdated }) => {
               background: bannerMode !== 'color' && bannerUrl ? `url(${bannerUrl}) center/cover` : bannerColor 
             }}
           >
-            <div className="avatar-edit-container">
-              <img src={avatar || user.avatar} alt="Avatar" className="avatar-preview" />
-              <label htmlFor="avatar-upload" className="avatar-edit-overlay">
-                <Upload size={20} />
-              </label>
+            <img src={avatar || user.avatar} alt="Avatar" className="avatar-preview" />
+          </div>
+
+          {/* Avatar Section */}
+          <div className="form-group">
+            <label>Profile Picture</label>
+            <div className="image-mode-tabs">
+              <button
+                type="button"
+                className={`image-mode-tab ${avatarMode === 'current' ? 'active' : ''}`}
+                onClick={() => { setAvatarMode('current'); setAvatar(user.avatar || ''); }}
+              >
+                <User size={16} />
+                Current
+              </button>
+              <button
+                type="button"
+                className={`image-mode-tab ${avatarMode === 'url' ? 'active' : ''}`}
+                onClick={() => setAvatarMode('url')}
+              >
+                <Link size={16} />
+                URL
+              </button>
+              <button
+                type="button"
+                className={`image-mode-tab ${avatarMode === 'upload' ? 'active' : ''}`}
+                onClick={() => setAvatarMode('upload')}
+              >
+                <Upload size={16} />
+                Upload
+              </button>
+            </div>
+            
+            {avatarMode === 'url' && (
               <input
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarUpload}
-                className="avatar-file-input"
-                id="avatar-upload"
+                type="url"
+                value={avatar}
+                onChange={(e) => setAvatar(e.target.value)}
+                placeholder="https://example.com/avatar.png"
                 disabled={loading}
               />
-            </div>
+            )}
+            
+            {avatarMode === 'upload' && (
+              <div className="file-upload-area">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="file-input"
+                  id="avatar-upload"
+                  disabled={loading}
+                />
+                <label htmlFor="avatar-upload" className="file-upload-label">
+                  <Upload size={24} />
+                  <span>Click to upload avatar</span>
+                  <span className="file-hint">PNG, JPG, GIF up to 5MB</span>
+                </label>
+              </div>
+            )}
           </div>
 
           <div className="form-group">
