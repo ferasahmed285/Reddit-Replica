@@ -79,7 +79,7 @@ router.put('/change-password', authenticateToken, async (req, res) => {
 // PUT /api/users/profile - Update own profile (protected) - MUST BE BEFORE /:username
 router.put('/profile', authenticateToken, async (req, res) => {
   try {
-    const { username, bio, bannerColor, bannerUrl } = req.body;
+    const { username, bio, bannerColor, bannerUrl, avatar } = req.body;
 
     if (username) {
       const trimmedUsername = username.trim();
@@ -146,6 +146,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
     if (bio !== undefined) updateFields.bio = bio.trim();
     if (bannerColor !== undefined) updateFields.bannerColor = bannerColor;
     if (bannerUrl !== undefined) updateFields.bannerUrl = bannerUrl;
+    if (avatar !== undefined) updateFields.avatar = avatar;
 
     // Use findByIdAndUpdate to avoid full document validation
     const updatedUser = await User.findByIdAndUpdate(

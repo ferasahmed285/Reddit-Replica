@@ -50,6 +50,8 @@ const compressImage = (file, maxWidth, maxHeight, quality = 0.8) => {
 const EditProfileModal = ({ isOpen, onClose, user, onProfileUpdated }) => {
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
+  const [avatar, setAvatar] = useState('');
+  const [avatarMode, setAvatarMode] = useState('current');
   const [bannerColor, setBannerColor] = useState('');
   const [bannerUrl, setBannerUrl] = useState('');
   const [bannerMode, setBannerMode] = useState('color');
@@ -63,11 +65,31 @@ const EditProfileModal = ({ isOpen, onClose, user, onProfileUpdated }) => {
     if (isOpen && user) {
       setUsername(user.username || '');
       setBio(user.bio || '');
+      setAvatar(user.avatar || '');
+      setAvatarMode('current');
       setBannerColor(user.bannerColor || BANNER_PRESETS[0].value);
       setBannerUrl(user.bannerUrl || '');
       setBannerMode(user.bannerUrl ? 'url' : 'color');
     }
   }, [isOpen, user]);
+
+  // Handle avatar image upload
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('Avatar file size must be less than 5MB', 'error');
+        return;
+      }
+      try {
+        const compressed = await compressImage(file, 400, 400, 0.9);
+        setAvatar(compressed);
+        setAvatarMode('upload');
+      } catch {
+        showToast('Failed to process image', 'error');
+      }
+    }
+  };
 
   // Handle banner image upload
   const handleBannerUpload = async (e) => {
@@ -90,6 +112,8 @@ const EditProfileModal = ({ isOpen, onClose, user, onProfileUpdated }) => {
   const handleCancel = () => {
     setUsername('');
     setBio('');
+    setAvatar('');
+    setAvatarMode('current');
     setBannerColor('');
     setBannerUrl('');
     setBannerMode('color');
@@ -128,6 +152,11 @@ const EditProfileModal = ({ isOpen, onClose, user, onProfileUpdated }) => {
         bannerColor: bannerMode === 'color' ? bannerColor : '',
         bannerUrl: bannerMode !== 'color' ? bannerUrl : '',
       };
+      
+      // Only include avatar if it was changed
+      if (avatarMode !== 'current') {
+        requestBody.avatar = avatar;
+      }
 
       const response = await fetch(`${API_URL}/users/profile`, {
         method: 'PUT',
@@ -190,7 +219,20 @@ const EditProfileModal = ({ isOpen, onClose, user, onProfileUpdated }) => {
               background: bannerMode !== 'color' && bannerUrl ? `url(${bannerUrl}) center/cover` : bannerColor 
             }}
           >
-            <img src={user.avatar} alt="Avatar" className="avatar-preview" />
+            <div className="avatar-edit-container">
+              <img src={avatar || user.avatar} alt="Avatar" className="avatar-preview" />
+              <label htmlFor="avatar-upload" className="avatar-edit-overlay">
+                <Upload size={20} />
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="avatar-file-input"
+                id="avatar-upload"
+                disabled={loading}
+              />
+            </div>
           </div>
 
           <div className="form-group">

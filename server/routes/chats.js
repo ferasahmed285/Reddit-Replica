@@ -37,12 +37,28 @@ router.get('/', authenticateToken, async (req, res) => {
       }
     ]);
 
-    // Format chats for response
+    // Get other usernames to fetch their avatars
+    const otherUsernames = chats.map(chat => 
+      chat.participantUsernames.find(u => u !== req.user.username)
+    ).filter(Boolean);
+    
+    // Fetch avatars for all other users in one query
+    const users = await User.find({ 
+      username: { $in: otherUsernames } 
+    }).select('username avatar').lean();
+    
+    const avatarMap = {};
+    users.forEach(u => {
+      avatarMap[u.username.toLowerCase()] = u.avatar;
+    });
+
+    // Format chats for response with avatars
     const formattedChats = chats.map(chat => {
       const otherUsername = chat.participantUsernames.find(u => u !== req.user.username);
       return {
         id: chat._id,
         otherUser: otherUsername,
+        otherUserAvatar: avatarMap[otherUsername?.toLowerCase()] || null,
         lastMessage: chat.lastMessage,
         updatedAt: chat.updatedAt,
         unreadCount: chat.unreadCount
@@ -118,6 +134,7 @@ router.post(
         return res.status(200).json({ 
           id: chat._id, 
           otherUser: otherUser.username,
+          otherUserAvatar: otherUser.avatar,
           isNew: false 
         });
       }
@@ -132,6 +149,7 @@ router.post(
       res.status(201).json({ 
         id: chat._id, 
         otherUser: otherUser.username,
+        otherUserAvatar: otherUser.avatar,
         isNew: true 
       });
     } catch (error) {

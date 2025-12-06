@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -47,16 +47,32 @@ const CommunityHeader = ({
       setLoading(true);
       const result = await communitiesAPI.join(communityId);
       
+      // Invalidate client-side cache
+      communitiesAPI.invalidateCache();
+      
       showToast(
         result.joined ? `Joined r/${name}` : `Left r/${name}`,
         'success'
       );
       
-      // Simple refresh after join/leave
-      window.location.reload();
+      // Update sidebar context
+      if (result.joined) {
+        addJoinedCommunity(result.community || { name: communityId, iconUrl: communityData?.iconUrl });
+      } else {
+        removeJoinedCommunity(communityId);
+      }
+      
+      // Update parent component with new member count
+      if (onCommunityUpdated && result.community) {
+        onCommunityUpdated({
+          memberCount: result.community.memberCount,
+          members: result.community.members || String(result.community.memberCount)
+        });
+      }
     } catch (error) {
       console.error('Join error:', error);
       showToast(`Failed to join: ${error.message}`, 'error');
+    } finally {
       setLoading(false);
     }
   };

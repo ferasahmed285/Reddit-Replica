@@ -129,6 +129,12 @@ let allCommunitiesCache = null;
 let allCommunitiesCacheTimestamp = 0;
 const ALL_COMMUNITIES_CACHE_DURATION = 30 * 1000; // 30 seconds
 
+// Function to invalidate communities cache
+const invalidateCommunitiesCache = () => {
+  allCommunitiesCache = null;
+  allCommunitiesCacheTimestamp = 0;
+};
+
 // Communities API - NO caching for user-specific data to ensure freshness
 export const communitiesAPI = {
   getAll: async () => {
@@ -141,6 +147,8 @@ export const communitiesAPI = {
     allCommunitiesCacheTimestamp = now;
     return data;
   },
+  
+  invalidateCache: invalidateCommunitiesCache,
   
   getById: (id) => apiRequest(`/communities/${id}`),
   

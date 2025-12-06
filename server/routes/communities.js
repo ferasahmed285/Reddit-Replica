@@ -332,6 +332,10 @@ router.post('/:id/join', authenticateToken, async (req, res) => {
     // Invalidate user cache for joined communities
     userDataCache.delete(`${req.user.id}:joined`);
     userDataCache.delete(`${req.user.id}:recent`);
+    
+    // Invalidate community cache so member count updates immediately
+    communityCache.delete(community.name);
+    invalidateCommunitiesCache();
 
     res.status(200).json({
       joined,

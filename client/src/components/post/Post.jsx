@@ -136,6 +136,9 @@ const Post = ({ post, onAuthRequired, onVoteUpdate, onPostDeleted, onPostUpdated
     try {
       const result = await communitiesAPI.join(post.subreddit);
       
+      // Invalidate client-side cache
+      communitiesAPI.invalidateCache();
+      
       // Sync with server response if different
       if (result.joined !== newJoined) {
         setJoined(result.joined);

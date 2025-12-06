@@ -172,6 +172,7 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
       const newChat = {
         id: result.id,
         otherUser: result.otherUser,
+        otherUserAvatar: result.otherUserAvatar,
         lastMessage: null,
         unreadCount: 0
       };
@@ -180,11 +181,12 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
       if (result.isNew) {
         setChats(prev => [newChat, ...prev]);
       } else {
-        // Move existing chat to top
+        // Move existing chat to top and update avatar
         setChats(prev => {
           const existing = prev.find(c => c.id === result.id);
           if (existing) {
-            return [existing, ...prev.filter(c => c.id !== result.id)];
+            const updated = { ...existing, otherUserAvatar: result.otherUserAvatar };
+            return [updated, ...prev.filter(c => c.id !== result.id)];
           }
           return prev;
         });
@@ -381,9 +383,13 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
                     className="chat-search-result-item"
                     onClick={() => handleStartChat(user.username)}
                   >
-                    <div className="chat-avatar-small">
-                      {user.username.charAt(0).toUpperCase()}
-                    </div>
+                    {user.avatar ? (
+                      <img src={user.avatar} alt={user.username} className="chat-avatar-small" />
+                    ) : (
+                      <div className="chat-avatar-small chat-avatar-placeholder">
+                        {user.username.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     <span className="chat-search-username">{user.username}</span>
                   </button>
                 ))}
@@ -407,9 +413,13 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
                   className={`chat-list-item ${selectedChat?.id === chat.id ? 'active' : ''}`}
                   onClick={() => setSelectedChat(chat)}
                 >
-                  <div className="chat-avatar">
-                    {chat.otherUser?.charAt(0).toUpperCase()}
-                  </div>
+                  {chat.otherUserAvatar ? (
+                    <img src={chat.otherUserAvatar} alt={chat.otherUser} className="chat-avatar" />
+                  ) : (
+                    <div className="chat-avatar chat-avatar-placeholder">
+                      {chat.otherUser?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div className="chat-item-info">
                     <span className="chat-item-name">{chat.otherUser}</span>
                     {chat.lastMessage && (
@@ -438,9 +448,13 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
                   <ArrowLeft size={20} />
                 </button>
                 <Link to={`/user/${selectedChat.otherUser}`} className="chat-header-user-link">
-                  <div className="chat-header-avatar">
-                    {selectedChat.otherUser?.charAt(0).toUpperCase()}
-                  </div>
+                  {selectedChat.otherUserAvatar ? (
+                    <img src={selectedChat.otherUserAvatar} alt={selectedChat.otherUser} className="chat-header-avatar" />
+                  ) : (
+                    <div className="chat-header-avatar chat-avatar-placeholder">
+                      {selectedChat.otherUser?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <span className="chat-header-name">{selectedChat.otherUser}</span>
                 </Link>
                 <button 
