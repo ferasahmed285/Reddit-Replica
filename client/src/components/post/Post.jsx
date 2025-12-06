@@ -106,7 +106,7 @@ const Post = ({ post, onAuthRequired, onVoteUpdate, onPostDeleted, onPostUpdated
     }
   }, [initialJoined]);
 
-  // Handle join
+  // Handle join with optimistic update
   const handleJoin = async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -116,24 +116,45 @@ const Post = ({ post, onAuthRequired, onVoteUpdate, onPostDeleted, onPostUpdated
       return;
     }
 
+    // Optimistic update - toggle immediately
+    const wasJoined = joined;
+    const newJoined = !wasJoined;
+    setJoined(newJoined);
+    
+    // Update sidebar immediately
+    if (newJoined) {
+      addJoinedCommunity({ name: post.subreddit, iconUrl: post.subredditIcon });
+    } else {
+      removeJoinedCommunity(post.subreddit);
+    }
+    
+    showToast(
+      newJoined ? `Joined r/${post.subreddit}` : `Left r/${post.subreddit}`,
+      'success'
+    );
+
     try {
       const result = await communitiesAPI.join(post.subreddit);
-      setJoined(result.joined);
       
-      // Update sidebar immediately
-      if (result.joined && result.community) {
-        addJoinedCommunity(result.community);
-      } else if (!result.joined) {
+      // Sync with server response if different
+      if (result.joined !== newJoined) {
+        setJoined(result.joined);
+        if (result.joined && result.community) {
+          addJoinedCommunity(result.community);
+        } else if (!result.joined) {
+          removeJoinedCommunity(post.subreddit);
+        }
+      }
+    } catch (error) {
+      // Rollback on error
+      setJoined(wasJoined);
+      if (wasJoined) {
+        addJoinedCommunity({ name: post.subreddit, iconUrl: post.subredditIcon });
+      } else {
         removeJoinedCommunity(post.subreddit);
       }
-      
-      showToast(
-        result.joined ? `Joined r/${post.subreddit}` : `Left r/${post.subreddit}`,
-        'success'
-      );
-    } catch (error) {
       console.error('Join error:', error);
-      showToast(`Failed to join: ${error.message}`, 'error');
+      showToast(`Failed to ${newJoined ? 'join' : 'leave'}: ${error.message}`, 'error');
     }
   };
 
