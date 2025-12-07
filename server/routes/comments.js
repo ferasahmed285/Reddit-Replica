@@ -5,7 +5,7 @@ const Comment = require('../models/Comment');
 const Post = require('../models/Post');
 const Vote = require('../models/Vote');
 const User = require('../models/User');
-const Community = require('../models/Community');
+
 const UserActivity = require('../models/UserActivity');
 const { notifyPostComment, notifyCommentReply } = require('../utils/notifications');
 
@@ -51,33 +51,7 @@ const addUserVoteInfo = async (comments, userId) => {
   return comments;
 };
 
-// Helper to build comment tree
-const buildCommentTree = (comments) => {
-  const commentMap = {};
-  const roots = [];
-
-  // Create map
-  comments.forEach(comment => {
-    commentMap[comment._id.toString()] = { ...comment.toJSON(), replies: [] };
-  });
-
-  // Build tree
-  comments.forEach(comment => {
-    const commentObj = commentMap[comment._id.toString()];
-    if (comment.parentComment) {
-      const parent = commentMap[comment.parentComment.toString()];
-      if (parent) {
-        parent.replies.push(commentObj);
-      }
-    } else {
-      roots.push(commentObj);
-    }
-  });
-
-  return roots;
-};
-
-// Helper to build comment tree from lean documents (no toJSON method)
+// Helper to build comment tree from lean documents
 const buildCommentTreeLean = (comments) => {
   const commentMap = {};
   const roots = [];

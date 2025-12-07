@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { communitiesAPI } from '../../services/api';
 import '../../styles/RightSidebar.css';
 
-const RightSidebar = ({ communityData, onCreatePost }) => {
+const RightSidebar = ({ communityData }) => {
   const [showAll, setShowAll] = useState(false);
   const [communities, setCommunities] = useState([]);
   const { currentUser } = useAuth();
