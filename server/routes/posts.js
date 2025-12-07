@@ -442,7 +442,7 @@ router.post('/:id/summarize', optionalAuth, async (req, res) => {
     const { GoogleGenerativeAI } = require('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     // Try gemini-1.5-flash first, fallback models: gemini-pro, gemini-1.0-pro
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     // Prepare content for summarization
     const contentToSummarize = `Title: ${post.title}\n\nContent: ${post.content || 'No additional content'}`;
