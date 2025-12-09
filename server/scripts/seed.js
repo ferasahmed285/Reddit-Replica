@@ -2,7 +2,6 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-// Import models
 const User = require('../models/User');
 const Community = require('../models/Community');
 const Post = require('../models/Post');
@@ -13,33 +12,34 @@ const UserActivity = require('../models/UserActivity');
 const CustomFeed = require('../models/CustomFeed');
 const Chat = require('../models/Chat');
 
-// Helper to generate random email
+// Generate random email
 const generateEmail = (username) => {
   const domains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
   return `${username}@${domains[Math.floor(Math.random() * domains.length)]}`;
 };
 
-// Helper to get random items from array
+// Get random items from array
 const getRandomItems = (arr, count) => {
   const shuffled = [...arr].sort(() => 0.5 - Math.random());
   return shuffled.slice(0, Math.min(count, arr.length));
 };
 
-// Helper to get random int
+// Get random int
 const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-// Generate colorful icons using UI Avatars API (very reliable)
+// Generate colorful icons using UI Avatars API
 const getIcon = (name) => {
   const colors = ['ff4500', '0079d3', '7193ff', 'ff8717', '94e044', 'ffb000', '46d160', 'ff66ac', 'ea0027', '00a6a5'];
   const color = colors[name.length % colors.length];
   return `https://ui-avatars.com/api/?name=${name.substring(0,2).toUpperCase()}&background=${color}&color=fff&size=128&bold=true&format=png`;
 };
 
-// Get banner using picsum.photos (very reliable, no watermarks)
+// Get banner using picsum.photos
 const getBanner = (seed) => {
   return `https://picsum.photos/seed/${seed}/1200/300`;
 };
 
+// Main seeding function, populates the database
 const seedDatabase = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);

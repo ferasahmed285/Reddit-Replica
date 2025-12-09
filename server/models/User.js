@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+// User Schema
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
@@ -36,7 +37,7 @@ const userSchema = new mongoose.Schema({
   googleId: {
     type: String,
     unique: true,
-    sparse: true // Allows multiple null values
+    sparse: true 
   },
   authProvider: {
     type: String,
@@ -93,9 +94,10 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 
 // Format karma for display
 userSchema.methods.getFormattedKarma = function() {
-  if (this.karma >= 1000000) return `${(this.karma / 1000000).toFixed(1)}M`;
-  if (this.karma >= 1000) return `${(this.karma / 1000).toFixed(1)}k`;
-  return String(this.karma);
+  const karma = this.karma;
+  if (karma >= 1000000) return `${(karma / 1000000).toFixed(1)}M`;
+  if (karma >= 1000) return `${(karma / 1000).toFixed(1)}k`;
+  return String(karma);
 };
 
 // Format cake day for display
@@ -103,6 +105,7 @@ userSchema.methods.getFormattedCakeDay = function() {
   return this.cakeDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
+// Converting the document to a JSON object
 // Don't return password in JSON
 userSchema.methods.toJSON = function() {
   const obj = this.toObject();
@@ -117,7 +120,7 @@ userSchema.methods.toJSON = function() {
 
 // Indexes for faster queries
 // Note: username and email already have indexes from unique: true
-userSchema.index({ createdAt: -1 }); // For sorting by newest
-userSchema.index({ displayName: 'text' }); // For searching by display name
+userSchema.index({ createdAt: -1 }); // for sorting by newest
+userSchema.index({ displayName: 'text' }); // for searching by display name
 
 module.exports = mongoose.model('User', userSchema);

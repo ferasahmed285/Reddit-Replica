@@ -14,15 +14,17 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // Helper function to generate JWT token
 const generateToken = (user) => {
   return jwt.sign(
-    { id: user._id.toString(), username: user.username },
+    { 
+      id: user._id.toString(), 
+      username: user.username 
+    },
     process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
 };
 
 // POST /api/auth/register
-router.post(
-  '/register',
+router.post('/register', 
   [
     body('email')
       .trim()
@@ -164,8 +166,7 @@ router.post('/google', async (req, res) => {
 });
 
 // POST /api/auth/login
-router.post(
-  '/login',
+router.post('/login',
   [
     body('username').trim().notEmpty().withMessage('Username is required'),
     body('password').notEmpty().withMessage('Password is required')
@@ -209,8 +210,7 @@ router.post(
 );
 
 // POST /api/auth/forgot-password
-router.post(
-  '/forgot-password',
+router.post('/forgot-password',
   [
     body('email')
       .trim()
@@ -270,8 +270,7 @@ router.post(
 );
 
 // POST /api/auth/reset-password
-router.post(
-  '/reset-password',
+router.post('/reset-password',
   [
     body('token').notEmpty().withMessage('Reset token is required'),
     body('password')
@@ -317,8 +316,7 @@ router.post(
 );
 
 // POST /api/auth/check-email - Check if email is available
-router.post(
-  '/check-email',
+router.post('/check-email',
   [
     body('email')
       .trim()

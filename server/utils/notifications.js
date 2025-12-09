@@ -1,3 +1,6 @@
+// This module handles user notifications for various actions 
+// like comments, replies, upvotes, and follows.
+
 const Notification = require('../models/Notification');
 
 /**
@@ -12,6 +15,8 @@ const Notification = require('../models/Notification');
  * @param {string} [options.relatedPostId] - Related post ID
  * @param {string} [options.relatedCommentId] - Related comment ID
  */
+
+// Helper to create a notification
 const createNotification = async (options) => {
   try {
     const {
@@ -49,9 +54,7 @@ const createNotification = async (options) => {
   }
 };
 
-/**
- * Create notification when someone comments on a post
- */
+// Create notification when someone comments on a post
 const notifyPostComment = async (post, commenter) => {
   return createNotification({
     userId: post.author,
@@ -64,9 +67,7 @@ const notifyPostComment = async (post, commenter) => {
   });
 };
 
-/**
- * Create notification when someone replies to a comment
- */
+// Create notification when someone replies to a comment
 const notifyCommentReply = async (parentComment, post, replier) => {
   return createNotification({
     userId: parentComment.author,
@@ -80,9 +81,7 @@ const notifyCommentReply = async (parentComment, post, replier) => {
   });
 };
 
-/**
- * Create notification when someone upvotes a post
- */
+// Create notification when someone upvotes a post
 const notifyPostUpvote = async (post, voter) => {
   return createNotification({
     userId: post.author,
@@ -95,9 +94,8 @@ const notifyPostUpvote = async (post, voter) => {
   });
 };
 
-/**
- * Create notification when someone follows a user
- */
+
+// Create notification when someone follows a user
 const notifyFollow = async (followedUserId, follower) => {
   return createNotification({
     userId: followedUserId,

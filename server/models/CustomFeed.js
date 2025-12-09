@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Custom Feed Schema
 const customFeedSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -39,20 +40,21 @@ const customFeedSchema = new mongoose.Schema({
   },
   iconColor: {
     type: String,
-    default: '#FFD700' // Yellow like Reddit's custom feed icon
+    default: '#FFD700' 
   }
 }, {
   timestamps: true
 });
 
-// Index for faster queries
-customFeedSchema.index({ creator: 1, name: 1 }, { unique: true });
-
+// Converting the document to a JSON object
 customFeedSchema.methods.toJSON = function() {
   const obj = this.toObject();
   obj.id = obj._id;
   obj.communityCount = obj.communities?.length || 0;
   return obj;
 };
+
+// Index for faster queries
+customFeedSchema.index({ creator: 1, name: 1 }, { unique: true });
 
 module.exports = mongoose.model('CustomFeed', customFeedSchema);

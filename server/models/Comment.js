@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { getTimeAgo } = require('../utils/helpers');
 
+// Comment Schema
 const commentSchema = new mongoose.Schema({
   content: {
     type: String,
@@ -59,6 +60,7 @@ commentSchema.methods.getTimeAgo = function() {
   return getTimeAgo(this.createdAt);
 };
 
+// Converting the document to a JSON object
 commentSchema.methods.toJSON = function() {
   const obj = this.toObject();
   obj.id = obj._id;
@@ -71,7 +73,7 @@ commentSchema.methods.toJSON = function() {
   return obj;
 };
 
-// Indexes
+// Index for faster queries
 commentSchema.index({ post: 1, createdAt: 1 });
 commentSchema.index({ author: 1 });
 commentSchema.index({ authorUsername: 1, createdAt: -1 }); // For fetching comments by username

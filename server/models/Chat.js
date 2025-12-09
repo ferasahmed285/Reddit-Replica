@@ -1,5 +1,9 @@
+// This file defines the Chat model for MongoDB using Mongoose.
+// It includes schemas for messages and the chat itself.
+
 const mongoose = require('mongoose');
 
+// The message schema.
 const messageSchema = new mongoose.Schema({
   sender: {
     type: mongoose.Schema.Types.ObjectId,
@@ -19,7 +23,6 @@ const messageSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  // Reply feature
   replyTo: {
     type: mongoose.Schema.Types.ObjectId,
     default: null
@@ -32,7 +35,6 @@ const messageSchema = new mongoose.Schema({
     type: String,
     default: null
   },
-  // Soft delete
   deleted: {
     type: Boolean,
     default: false
@@ -41,6 +43,7 @@ const messageSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// The chat schema.
 const chatSchema = new mongoose.Schema({
   participants: [{
     type: mongoose.Schema.Types.ObjectId,

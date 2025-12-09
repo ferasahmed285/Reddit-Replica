@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// UserActivity schema
 const userActivitySchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,

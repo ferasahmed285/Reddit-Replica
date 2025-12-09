@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Vote schema
 const voteSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -18,7 +19,7 @@ const voteSchema = new mongoose.Schema({
   },
   voteType: {
     type: Number,
-    enum: [1, -1], // 1 = upvote, -1 = downvote
+    enum: [1, -1], // 1 for upvote, -1 for downvote
     required: true
   }
 }, {

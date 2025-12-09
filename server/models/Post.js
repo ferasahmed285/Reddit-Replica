@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { getTimeAgo } = require('../utils/helpers');
 
+// Post Schema
 const postSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -68,6 +69,7 @@ postSchema.methods.getTimeAgo = function() {
   return getTimeAgo(this.createdAt);
 };
 
+// Converting the document to a JSON object
 postSchema.methods.toJSON = function() {
   const obj = this.toObject();
   obj.id = obj._id;
@@ -79,13 +81,12 @@ postSchema.methods.toJSON = function() {
   return obj;
 };
 
-// Indexes
+// Indexes for faster queries
 postSchema.index({ community: 1, createdAt: -1 });
 postSchema.index({ author: 1, createdAt: -1 });
-postSchema.index({ authorUsername: 1, createdAt: -1 }); // For fetching posts by username
-postSchema.index({ communityName: 1, createdAt: -1 }); // For fetching posts by community
+postSchema.index({ authorUsername: 1, createdAt: -1 }); // for fetching posts by username
+postSchema.index({ communityName: 1, createdAt: -1 }); // for fetching posts by community
 postSchema.index({ createdAt: -1 });
-// Text index for search - allows efficient text search on title and content
-postSchema.index({ title: 'text', content: 'text' });
+postSchema.index({ title: 'text', content: 'text' }); // allows efficient text search on title and content
 
 module.exports = mongoose.model('Post', postSchema);

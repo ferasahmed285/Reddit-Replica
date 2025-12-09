@@ -5,6 +5,7 @@ const User = require('../models/User');
 const userCache = new Map();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// Helper to get user from cache
 const getCachedUser = async (userId) => {
   const cached = userCache.get(userId);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {

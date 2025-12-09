@@ -8,6 +8,8 @@ const Notification = require('./Notification');
 const CustomFeed = require('./CustomFeed');
 const Chat = require('./Chat');
 
+
+// Export all models
 module.exports = {
   User,
   Post,

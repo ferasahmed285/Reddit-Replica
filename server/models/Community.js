@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Community Schema
 const communitySchema = new mongoose.Schema({
   name: {
     type: String,
@@ -60,18 +61,22 @@ const communitySchema = new mongoose.Schema({
 
 // Virtual for formatted member count
 communitySchema.methods.getFormattedMembers = function() {
-  if (this.memberCount >= 1000000) return `${(this.memberCount / 1000000).toFixed(1)}M`;
-  if (this.memberCount >= 1000) return `${(this.memberCount / 1000).toFixed(0)}k`;
-  return String(this.memberCount);
+  const count = this.memberCount;
+  if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+  if (count >= 1000) return `${(count / 1000).toFixed(0)}k`;
+  return String(count);
 };
 
-// Virtual for online count (simulated)
+// Virtual for online count
 communitySchema.methods.getOnlineCount = function() {
-  const online = Math.floor(this.memberCount * 0.003);
-  if (online >= 1000) return `${(online / 1000).toFixed(0)}k`;
-  return String(Math.max(online, 1));
+  const online = Math.max(Math.floor(this.memberCount * 0.003), 1);
+  if (online >= 1000) {
+    return `${(online / 1000).toFixed(0)}k`;
+  }
+  return String(online);
 };
 
+// Converting the document to a JSON object
 communitySchema.methods.toJSON = function() {
   const obj = this.toObject();
   obj.id = obj.name;
