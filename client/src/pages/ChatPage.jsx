@@ -50,16 +50,29 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
         
         // If navigated from profile with chat info, select that chat (only on initial load)
         if (isInitial && location.state?.chatId) {
+          // Try to find the chat in fetched data to get the avatar
+          const existingChat = data.find(c => c.id === location.state.chatId);
           const chatFromState = {
             id: location.state.chatId,
             otherUser: location.state.otherUser,
-            lastMessage: null,
-            unreadCount: 0
+            otherUserAvatar: existingChat?.otherUserAvatar || location.state.otherUserAvatar || null,
+            lastMessage: existingChat?.lastMessage || null,
+            unreadCount: existingChat?.unreadCount || 0
           };
           setSelectedChat(chatFromState);
           // Clear the state so it doesn't persist on refresh
           window.history.replaceState({}, document.title);
         }
+        
+        // Update selectedChat with latest avatar data if it exists in the fetched chats
+        setSelectedChat(prev => {
+          if (!prev) return prev;
+          const updatedChat = data.find(c => c.id === prev.id);
+          if (updatedChat && updatedChat.otherUserAvatar !== prev.otherUserAvatar) {
+            return { ...prev, otherUserAvatar: updatedChat.otherUserAvatar };
+          }
+          return prev;
+        });
       } catch (error) {
         console.error('Error fetching chats:', error);
       } finally {
