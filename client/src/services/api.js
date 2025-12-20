@@ -2,6 +2,17 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const getAuthToken = () => localStorage.getItem('authToken');
 
+// Cache for posts
+let allPostsCache = null;
+let allPostsCacheTimestamp = 0;
+const ALL_POSTS_CACHE_DURATION = 30 * 1000; // 30 seconds
+
+// Function to invalidate posts cache
+const invalidatePostsCache = () => {
+  allPostsCache = null;
+  allPostsCacheTimestamp = 0;
+};
+
 // Request deduplication - prevents multiple simultaneous calls to the same endpoint
 const pendingRequests = new Map();
 
@@ -54,10 +65,23 @@ const apiRequest = async (endpoint, options = {}) => {
 
 // Posts API
 export const postsAPI = {
-  getAll: (subreddit) => {
-    const query = subreddit ? `?subreddit=${subreddit}` : '';
+  getAll: async (subreddit) => {
+    // Only cache when fetching all posts (no subreddit filter)
+    if (!subreddit) {
+      const now = Date.now();
+      if (allPostsCache && (now - allPostsCacheTimestamp) < ALL_POSTS_CACHE_DURATION) {
+        return allPostsCache;
+      }
+      const data = await apiRequest('/posts');
+      allPostsCache = data;
+      allPostsCacheTimestamp = now;
+      return data;
+    }
+    const query = `?subreddit=${subreddit}`;
     return apiRequest(`/posts${query}`);
   },
+  
+  invalidateCache: invalidatePostsCache,
   
   search: (query) => {
     if (!query || query.trim().length < 2) return Promise.resolve([]);
@@ -66,19 +90,31 @@ export const postsAPI = {
   
   getById: (id) => apiRequest(`/posts/${id}`),
   
-  create: (postData) => apiRequest('/posts', {
-    method: 'POST',
-    body: JSON.stringify(postData),
-  }),
+  create: async (postData) => {
+    const result = await apiRequest('/posts', {
+      method: 'POST',
+      body: JSON.stringify(postData),
+    });
+    invalidatePostsCache();
+    return result;
+  },
   
-  update: (postId, postData) => apiRequest(`/posts/${postId}`, {
-    method: 'PUT',
-    body: JSON.stringify(postData),
-  }),
+  update: async (postId, postData) => {
+    const result = await apiRequest(`/posts/${postId}`, {
+      method: 'PUT',
+      body: JSON.stringify(postData),
+    });
+    invalidatePostsCache();
+    return result;
+  },
   
-  delete: (postId) => apiRequest(`/posts/${postId}`, {
-    method: 'DELETE',
-  }),
+  delete: async (postId) => {
+    const result = await apiRequest(`/posts/${postId}`, {
+      method: 'DELETE',
+    });
+    invalidatePostsCache();
+    return result;
+  },
   
   vote: (postId, voteType) => apiRequest(`/posts/${postId}/vote`, {
     method: 'POST',
