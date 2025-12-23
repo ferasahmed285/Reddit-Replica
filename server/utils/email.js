@@ -1,34 +1,14 @@
 const nodemailer = require('nodemailer');
 
-const createTransporter = () => {
-  // Validate required environment variables
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.warn('Warning: EMAIL_USER or EMAIL_PASS not configured. Password reset emails will fail.');
-    return null;
-  }
-
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-};
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 const sendPasswordResetEmail = async (email, resetToken) => {
-  const transporter = createTransporter();
-  
-  if (!transporter) {
-    console.error('Email transporter not configured. Check EMAIL_USER and EMAIL_PASS environment variables.');
-    throw new Error('Email service not configured');
-  }
-
-  if (!process.env.CLIENT_URL) {
-    console.error('CLIENT_URL environment variable not set');
-    throw new Error('Client URL not configured');
-  }
-
   const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
   
   const mailOptions = {
@@ -48,13 +28,7 @@ const sendPasswordResetEmail = async (email, resetToken) => {
     `,
   };
 
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`Password reset email sent to ${email}`);
-  } catch (error) {
-    console.error('Failed to send password reset email:', error.message);
-    throw new Error('Failed to send password reset email');
-  }
+  await transporter.sendMail(mailOptions);
 };
 
 module.exports = { sendPasswordResetEmail };
