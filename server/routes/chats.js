@@ -38,28 +38,33 @@ router.get('/', authenticateToken, async (req, res) => {
       }
     ]);
 
-    // Get other usernames to fetch their avatars
+    // Get other usernames to fetch their avatars and displayNames
     const otherUsernames = chats.map(chat => 
-      chat.participantUsernames.find(u => u !== req.user.username)
+      chat.participantUsernames.find(u => u.toLowerCase() !== req.user.username.toLowerCase())
     ).filter(Boolean);
     
-    // Fetch avatars for all other users in one query
+    // Fetch avatars and displayNames for all other users in one query
     const users = await User.find({ 
       username: { $in: otherUsernames } 
-    }).select('username avatar').lean();
+    }).select('username displayName avatar').lean();
     
-    const avatarMap = {};
+    const userMap = {};
     users.forEach(u => {
-      avatarMap[u.username.toLowerCase()] = u.avatar || getDefaultAvatar(u.username);
+      userMap[u.username.toLowerCase()] = {
+        avatar: u.avatar || getDefaultAvatar(u.username),
+        displayName: u.displayName || u.username
+      };
     });
 
-    // Format chats for response with avatars
+    // Format chats for response with avatars and displayNames
     const formattedChats = chats.map(chat => {
-      const otherUsername = chat.participantUsernames.find(u => u !== req.user.username);
+      const otherUsername = chat.participantUsernames.find(u => u.toLowerCase() !== req.user.username.toLowerCase());
+      const userData = userMap[otherUsername?.toLowerCase()] || {};
       return {
         id: chat._id,
         otherUser: otherUsername,
-        otherUserAvatar: avatarMap[otherUsername?.toLowerCase()] || getDefaultAvatar(otherUsername),
+        otherUserDisplayName: userData.displayName || otherUsername,
+        otherUserAvatar: userData.avatar || getDefaultAvatar(otherUsername),
         lastMessage: chat.lastMessage,
         updatedAt: chat.updatedAt,
         unreadCount: chat.unreadCount
@@ -120,7 +125,7 @@ router.post(
 
       // Find user and existing chat in parallel for speed
       const [otherUser, existingChat] = await Promise.all([
-        User.findOne({ username: lowerUsername }).select('_id username avatar').lean(),
+        User.findOne({ username: lowerUsername }).select('_id username displayName avatar').lean(),
         Chat.findOne({ participantUsernames: { $all: [req.user.username.toLowerCase(), lowerUsername] } })
           .select('_id')
           .lean()
@@ -134,6 +139,7 @@ router.post(
         return res.status(200).json({ 
           id: existingChat._id, 
           otherUser: otherUser.username,
+          otherUserDisplayName: otherUser.displayName || otherUser.username,
           otherUserAvatar: otherUser.avatar || getDefaultAvatar(otherUser.username),
           isNew: false 
         });
@@ -149,6 +155,7 @@ router.post(
       res.status(201).json({ 
         id: chat._id, 
         otherUser: otherUser.username,
+        otherUserDisplayName: otherUser.displayName || otherUser.username,
         otherUserAvatar: otherUser.avatar || getDefaultAvatar(otherUser.username),
         isNew: true 
       });
@@ -173,14 +180,15 @@ router.get('/:id', authenticateToken, async (req, res) => {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    const otherUsername = chat.participantUsernames.find(u => u !== req.user.username);
+    const otherUsername = chat.participantUsernames.find(u => u.toLowerCase() !== req.user.username.toLowerCase());
     
-    // Fetch avatar for the other user
-    const otherUser = await User.findOne({ username: otherUsername }).select('avatar').lean();
+    // Fetch avatar and displayName for the other user
+    const otherUser = await User.findOne({ username: otherUsername }).select('avatar displayName').lean();
 
     res.status(200).json({
       id: chat._id,
       otherUser: otherUsername,
+      otherUserDisplayName: otherUser?.displayName || otherUsername,
       otherUserAvatar: otherUser?.avatar || getDefaultAvatar(otherUsername),
       messages: chat.messages,
       updatedAt: chat.updatedAt

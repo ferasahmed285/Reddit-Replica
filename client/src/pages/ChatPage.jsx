@@ -53,6 +53,8 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
           const chatFromState = {
             id: location.state.chatId,
             otherUser: location.state.otherUser,
+            otherUserDisplayName: location.state.otherUserDisplayName,
+            otherUserAvatar: location.state.otherUserAvatar,
             lastMessage: null,
             unreadCount: 0
           };
@@ -172,6 +174,7 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
       const newChat = {
         id: result.id,
         otherUser: result.otherUser,
+        otherUserDisplayName: result.otherUserDisplayName,
         otherUserAvatar: result.otherUserAvatar,
         lastMessage: null,
         unreadCount: 0
@@ -185,7 +188,7 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
         setChats(prev => {
           const existing = prev.find(c => c.id === result.id);
           if (existing) {
-            const updated = { ...existing, otherUserAvatar: result.otherUserAvatar };
+            const updated = { ...existing, otherUserAvatar: result.otherUserAvatar, otherUserDisplayName: result.otherUserDisplayName };
             return [updated, ...prev.filter(c => c.id !== result.id)];
           }
           return prev;
@@ -435,14 +438,14 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
                   onClick={() => setSelectedChat(chat)}
                 >
                   {chat.otherUserAvatar ? (
-                    <img src={chat.otherUserAvatar} alt={chat.otherUser} className="chat-avatar" />
+                    <img src={chat.otherUserAvatar} alt={chat.otherUserDisplayName || chat.otherUser} className="chat-avatar" />
                   ) : (
                     <div className="chat-avatar chat-avatar-placeholder">
-                      {chat.otherUser?.charAt(0).toUpperCase()}
+                      {(chat.otherUserDisplayName || chat.otherUser)?.charAt(0).toUpperCase()}
                     </div>
                   )}
                   <div className="chat-item-info">
-                    <span className="chat-item-name">{chat.otherUser}</span>
+                    <span className="chat-item-name">{chat.otherUserDisplayName || chat.otherUser}</span>
                     {chat.lastMessage && (
                       <span className="chat-item-preview">
                         {chat.lastMessage.senderUsername === currentUser.username ? 'You: ' : ''}
@@ -470,13 +473,13 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
                 </button>
                 <Link to={`/user/${selectedChat.otherUser}`} className="chat-header-user-link">
                   {selectedChat.otherUserAvatar ? (
-                    <img src={selectedChat.otherUserAvatar} alt={selectedChat.otherUser} className="chat-header-avatar" />
+                    <img src={selectedChat.otherUserAvatar} alt={selectedChat.otherUserDisplayName || selectedChat.otherUser} className="chat-header-avatar" />
                   ) : (
                     <div className="chat-header-avatar chat-avatar-placeholder">
-                      {selectedChat.otherUser?.charAt(0).toUpperCase()}
+                      {(selectedChat.otherUserDisplayName || selectedChat.otherUser)?.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className="chat-header-name">{selectedChat.otherUser}</span>
+                  <span className="chat-header-name">{selectedChat.otherUserDisplayName || selectedChat.otherUser}</span>
                 </Link>
                 <button 
                   className="chat-delete-btn" 
@@ -581,7 +584,7 @@ const ChatPage = ({ isSidebarCollapsed, onToggleSidebar }) => {
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={handleDeleteChat}
         title="Delete Conversation"
-        message={`Are you sure you want to delete this conversation with ${selectedChat?.otherUser}? This will delete the chat for both users and cannot be undone.`}
+        message={`Are you sure you want to delete this conversation with ${selectedChat?.otherUserDisplayName || selectedChat?.otherUser}? This will delete the chat for both users and cannot be undone.`}
         confirmText="Delete"
         type="danger"
       />
