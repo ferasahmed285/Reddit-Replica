@@ -1,24 +1,18 @@
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 const sendPasswordResetEmail = async (email, resetToken) => {
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error('RESEND_API_KEY environment variable is not set');
-  }
-
-  const clientUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL;
-  if (!clientUrl) {
-    throw new Error('CLIENT_URL or FRONTEND_URL not configured');
-  }
-
-  const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
+  const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
   
-  // Use Resend's default domain for testing, or your verified domain
-  const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
-
-  const { data, error } = await resend.emails.send({
-    from: `Reddit-Replica <${fromEmail}>`,
+  const mailOptions = {
+    from: `"Reddit-Replica" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'Password Reset Request',
     html: `
@@ -32,15 +26,9 @@ const sendPasswordResetEmail = async (email, resetToken) => {
         <p style="color: #888; font-size: 12px;">This email was sent from Reddit Clone</p>
       </div>
     `,
-  });
+  };
 
-  if (error) {
-    console.error('Resend email error:', error);
-    throw new Error(`Failed to send email: ${error.message}`);
-  }
-
-  console.log('Password reset email sent successfully:', data.id);
-  return data;
+  await transporter.sendMail(mailOptions);
 };
 
 module.exports = { sendPasswordResetEmail };
